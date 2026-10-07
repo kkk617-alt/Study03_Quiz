@@ -1,0 +1,79 @@
+/* 상식 퀴즈 — 시스템 폰트만 사용한다. 외부 폰트·CDN 참조 없음 (PRD §5.1). */
+
+:root {
+  --bg: #f7f7f8;
+  --fg: #1c1c1e;
+  --muted: #6b6b70;
+  --line: #d8d8dc;
+  --card: #ffffff;
+  --accent: #2b5cd9;
+  --danger: #c0392b;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 24px 16px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic",
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.screen[hidden] { display: none; }
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+.lead {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  color: var(--danger);
+  background: #fdf0ee;
+  font-weight: 600;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: left;
+  width: 100%;
+}
+
+button:hover:not(:disabled) { border-color: var(--accent); }
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

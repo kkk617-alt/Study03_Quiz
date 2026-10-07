@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>상식 퀴즈</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+
+    <!-- 시작 화면 -->
+    <section id="screen-home" class="screen">
+      <h1>상식 퀴즈</h1>
+      <p class="lead">카테고리를 고르면 10문항이 시작됩니다.</p>
+      <p id="data-error" class="error" hidden>문항 데이터에 오류가 있습니다</p>
+      <div id="category-list" class="button-grid"></div>
+    </section>
+
+    <!-- 문제 화면 (Task 3) -->
+    <section id="screen-quiz" class="screen" hidden></section>
+
+    <!-- 결과 화면 (Task 4) -->
+    <section id="screen-result" class="screen" hidden></section>
+
+    <!-- 순위표 화면 (3단계) -->
+    <section id="screen-leaderboard" class="screen" hidden></section>
+
+  </main>
+
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
