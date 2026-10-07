@@ -117,9 +117,67 @@ function validateQuestions() {
   return errors;
 }
 
-// ---- 4. 유틸 (셔플, 점수 서식) — Task 3·4 ----
+// ---- 4. 유틸 (셔플, 점수 서식) ----
 
-// ---- 5. 덱 생성 (buildDeck) — Task 3 ----
+// Fisher-Yates. 새 배열을 반환하고 입력을 수정하지 않는다.
+function shuffle(arr) {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = out[i];
+    out[i] = out[j];
+    out[j] = tmp;
+  }
+  return out;
+}
+
+function categoryName(categoryId) {
+  for (let i = 0; i < CATEGORIES.length; i++) {
+    if (CATEGORIES[i].id === categoryId) return CATEGORIES[i].name;
+  }
+  return '';
+}
+
+function sourceHost(url) {
+  try {
+    return new URL(url).hostname;
+  } catch (e) {
+    return url;
+  }
+}
+
+// ---- 5. 덱 생성 (buildDeck) (PRD §3.8.1) ----
+
+// 문항 순서를 섞고, 문항마다 보기를 섞은 뒤 정답의 새 위치를 다시 계산한다.
+// 보기 섞기는 인덱스 순열 방식이다 — 정답 문자열을 indexOf 로 찾으면
+// 같은 문자열 보기가 둘 있을 때 엉뚱한 위치를 가리킨다.
+// QUESTIONS 원본은 건드리지 않는다.
+function buildDeck(categoryId) {
+  const source = Array.isArray(QUESTIONS[categoryId]) ? QUESTIONS[categoryId] : [];
+  const ordered = shuffle(source);
+  const deck = [];
+
+  for (let i = 0; i < ordered.length; i++) {
+    const q = ordered[i];
+    const positions = [];
+    for (let p = 0; p < q.options.length; p++) positions.push(p);
+    const perm = shuffle(positions);
+
+    const options = [];
+    for (let n = 0; n < perm.length; n++) options.push(q.options[perm[n]]);
+
+    deck.push({
+      id: q.id,
+      question: q.question,
+      options: options,
+      answerIndex: perm.indexOf(q.answerIndex),
+      explanation: q.explanation,
+      source: { title: q.source.title, url: q.source.url },
+    });
+  }
+
+  return deck;
+}
 
 // ---- 6. 렌더 함수 ----
 
@@ -138,6 +196,7 @@ function render() {
     if (el) el.hidden = keys[i] !== state.screen;
   }
   if (state.screen === 'home') renderHome();
+  else if (state.screen === 'quiz') renderQuiz();
 }
 
 function renderHome() {
@@ -159,13 +218,74 @@ function renderHome() {
   }
 }
 
+// phase 가 'answering' 이면 문제까지, 'explaining' 이면 해설까지 그린다.
+function renderQuiz() {
+  const item = state.deck[state.index];
+  if (!item) return;
+
+  const explaining = state.phase === 'explaining';
+  const record = explaining ? state.answers[state.answers.length - 1] : null;
+
+  setText('progress', (state.index + 1) + ' / ' + state.deck.length);
+  setText('round-label', categoryName(state.categoryId) + ' · ' + MODES[state.mode].label);
+  setText('question-text', item.question);
+
+  const list = document.getElementById('option-list');
+  if (list) {
+    list.innerHTML = '';
+    for (let i = 0; i < item.options.length; i++) {
+      list.appendChild(buildOptionButton(item, i, explaining, record));
+    }
+  }
+
+  const area = document.getElementById('explain-area');
+  if (area) area.hidden = !explaining;
+
+  if (explaining && record) {
+    setText('feedback', record.correct ? '✓ 정답' : '✗ 오답');
+    const feedback = document.getElementById('feedback');
+    if (feedback) {
+      feedback.classList.remove('is-correct', 'is-wrong');
+      feedback.classList.add(record.correct ? 'is-correct' : 'is-wrong');
+    }
+    setText('explanation', item.explanation);
+    setText('source', '출처: ' + item.source.title + ' · ' + sourceHost(item.source.url));
+    setText('next-btn', state.index === state.deck.length - 1 ? '결과 보기' : '다음');
+  }
+}
+
+function buildOptionButton(item, i, explaining, record) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'option';
+  button.textContent = item.options[i];
+  button.dataset.optionIndex = String(i);
+  button.disabled = explaining;
+
+  if (explaining && record) {
+    if (i === item.answerIndex) button.classList.add('is-answer');
+    if (i === record.chosenIndex && !record.correct) button.classList.add('is-chosen-wrong');
+    if (i === record.chosenIndex && record.correct) button.classList.add('is-chosen-right');
+  }
+
+  button.addEventListener('click', function () {
+    selectOption(i);
+  });
+  return button;
+}
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
 // ---- 7. 이벤트 핸들러 ----
 
-// 1단계에서는 state 를 채우고 화면만 바꾼다. 덱 생성은 Task 3.
 function startRound(mode, categoryId) {
   if (dataBlocked) return;
   state.mode = mode;
   state.categoryId = categoryId;
+  state.deck = buildDeck(categoryId);
   state.index = 0;
   state.score = 0;
   state.answers = [];
@@ -176,6 +296,37 @@ function startRound(mode, categoryId) {
   state.reviewRound = false;
   state.baseScore = null;
   state.screen = 'quiz';
+  render();
+}
+
+// 해설 상태나 시간 초과 뒤의 클릭은 받지 않는다 (PRD §3.4, §3.9.3).
+// 버튼 disabled 만으로는 키보드·라벨 경로가 남으므로 여기서 phase 를 본다.
+function selectOption(index) {
+  if (state.phase !== 'answering') return;
+  const item = state.deck[state.index];
+  if (!item) return;
+
+  const correct = index === item.answerIndex;
+  state.answers.push({
+    questionId: item.id,
+    chosenIndex: index,
+    correct: correct,
+    hintUsed: state.hintUsed,
+  });
+  state.phase = 'explaining';
+  render();
+}
+
+function nextQuestion() {
+  state.index += 1;
+  state.phase = 'answering';
+  state.hintUsed = false;
+  state.hintRemoved = [];
+  state.deadline = null;
+
+  if (state.index >= state.deck.length) {
+    state.screen = 'result';
+  }
   render();
 }
 
@@ -198,6 +349,9 @@ function init() {
     const notice = document.getElementById('data-error');
     if (notice) notice.hidden = false;
   }
+
+  const next = document.getElementById('next-btn');
+  if (next) next.addEventListener('click', nextQuestion);
 
   state.screen = 'home';
   render();

@@ -77,3 +77,87 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+/* ---- 문제 화면 ---- */
+
+.quiz-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.progress { font-variant-numeric: tabular-nums; }
+
+.question {
+  margin: 0 0 20px;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.option-list {
+  display: grid;
+  gap: 10px;
+}
+
+button.option {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  white-space: normal;
+}
+
+button.option:disabled { opacity: 1; }
+
+button.option.is-answer {
+  border-color: #1f7a45;
+  background: #eaf6ee;
+  font-weight: 600;
+}
+
+button.option.is-chosen-right {
+  border-color: #1f7a45;
+  background: #eaf6ee;
+}
+
+button.option.is-chosen-wrong {
+  border-color: var(--danger);
+  background: #fdf0ee;
+  text-decoration: line-through;
+}
+
+.explain {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.feedback {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.feedback.is-correct { color: #1f7a45; }
+.feedback.is-wrong { color: var(--danger); }
+
+.explanation { margin: 0 0 10px; }
+
+.source {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+button.next {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  text-align: center;
+  font-weight: 600;
+}
