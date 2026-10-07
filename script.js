@@ -217,13 +217,7 @@ function render() {
 }
 
 function renderHome() {
-  // 순위표 기록 여부는 모드 이름이 아니라 MODES 테이블로 판단한다 (PRD §2.2, §3.2, §5.4).
-  const notice = document.getElementById('unranked-notice');
-  if (notice) {
-    const mode = MODES[state.mode];
-    notice.textContent = mode.label + ' 모드 · 순위표에 기록되지 않음';
-    notice.hidden = mode.ranked;
-  }
+  renderUnrankedNotice('unranked-notice', true);
 
   const list = document.getElementById('category-list');
   if (!list) return;
@@ -299,6 +293,18 @@ function buildOptionButton(item, i, explaining, record) {
   return button;
 }
 
+// 순위표 기록 여부는 모드 이름이 아니라 MODES 테이블로 판단한다 (PRD §2.2, §3.2, §5.4).
+// 두 화면이 같은 문구를 쓰므로 한 곳에서만 만든다. 시작 화면은 어떤 모드인지 알 길이
+// 따로 없어 모드 이름을 앞에 붙이고, 결과 화면은 바로 윗줄이 이미 모드를 말하므로 붙이지 않는다.
+function renderUnrankedNotice(elementId, withModeLabel) {
+  const notice = document.getElementById(elementId);
+  if (!notice) return;
+  const mode = MODES[state.mode];
+  const prefix = withModeLabel ? mode.label + ' 모드 · ' : '';
+  notice.textContent = prefix + '순위표에 기록되지 않음';
+  notice.hidden = mode.ranked;
+}
+
 function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
@@ -309,6 +315,7 @@ function renderResult() {
   setText('result-score', formatScore(state.score) + ' / ' + QUESTIONS_PER_CATEGORY);
   setText('result-label', categoryName(state.categoryId) + ' · ' +
     MODES[state.mode].label + ' 모드');
+  renderUnrankedNotice('result-unranked');
 }
 
 // ---- 7. 이벤트 핸들러 ----
