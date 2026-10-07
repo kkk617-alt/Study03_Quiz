@@ -1,0 +1,97 @@
+// 상식 퀴즈 문항 데이터. 데이터만 둔다 — 로직을 넣지 않는다 (PRD §4.1).
+// answerIndex는 아래 적힌 options 순서 기준이다. 보기 섞기는 런타임에만 적용된다 (PRD §3.8.1).
+
+const CATEGORIES = [
+  { id: 'korean-history',  name: '한국사' },
+  { id: 'world-geography', name: '세계지리' },
+  { id: 'science',         name: '과학' },
+  { id: 'arts-culture',    name: '예술과 문화' },
+];
+
+const QUESTIONS = {
+  'korean-history': [
+    {
+      id: 'kh-01',
+      question: '918년에 고려를 건국한 인물은?',
+      options: ['왕건', '이성계', '견훤', '궁예'],
+      answerIndex: 0,
+      explanation: '개성 출신 왕건이 나라를 세우고 936년 후삼국을 통합했습니다.',
+      source: { title: '한국민족문화대백과사전 「고려」', url: 'https://encykorea.aks.ac.kr/Article/E0003424' },
+    },
+    {
+      id: 'kh-02',
+      question: '세종이 훈민정음을 창제한 해는?',
+      options: ['1420년', '1443년', '1446년', '1450년'],
+      answerIndex: 1,
+      explanation: '1443년 겨울에 창제하고 1446년에 반포했습니다.',
+      source: { title: '한국민족문화대백과사전 「훈민정음」', url: 'https://encykorea.aks.ac.kr/Article/E0065805' },
+    },
+    {
+      id: 'kh-03',
+      question: '고려 인종의 명을 받아 『삼국사기』 편찬을 주도한 인물은?',
+      options: ['김부식', '일연', '서거정', '정도전'],
+      answerIndex: 0,
+      explanation: '1145년경에 편찬된 삼국시대 역사서로, 책임 편찬자가 사료 선택과 논찬을 직접 맡았습니다.',
+      source: { title: '한국민족문화대백과사전 「삼국사기」', url: 'https://encykorea.aks.ac.kr/Article/E0026478' },
+    },
+    {
+      id: 'kh-04',
+      question: '대한민국 임시정부가 중국 상하이에서 수립된 해는?',
+      options: ['1910년', '1919년', '1926년', '1932년'],
+      answerIndex: 1,
+      explanation: '3·1 운동 직후인 1919년 4월 11일에 세워져 1945년까지 활동했습니다.',
+      source: { title: '한국민족문화대백과사전 「대한민국임시정부」', url: 'https://encykorea.aks.ac.kr/Article/E0015017' },
+    },
+    {
+      id: 'kh-05',
+      question: '조선에서 측우기를 처음 만들어 사용한 왕은?',
+      options: ['태종', '세종', '성종', '영조'],
+      answerIndex: 1,
+      explanation: '조선의 공식적인 우량 측정 기구로, 영조 때 규격이 개정되었습니다.',
+      source: { title: '한국민족문화대백과사전 「측우기」', url: 'https://encykorea.aks.ac.kr/Article/E0058337' },
+    },
+    {
+      id: 'kh-06',
+      question: '『조선왕조실록』이 기록한 왕의 범위는?',
+      options: ['태조부터 철종까지', '태조부터 고종까지', '세종부터 철종까지', '세종부터 순종까지'],
+      answerIndex: 0,
+      explanation: '제1대부터 제25대까지 25대 472년간을 연월일 순서의 편년체로 적었습니다.',
+      source: { title: '한국민족문화대백과사전 「조선왕조실록」', url: 'https://encykorea.aks.ac.kr/Article/E0052160' },
+    },
+    {
+      id: 'kh-07',
+      question: '고려대장경판(팔만대장경)을 보관하고 있는 건물은?',
+      options: ['해인사 장경판전', '불국사 대웅전', '통도사 금강계단', '송광사 국사전'],
+      answerIndex: 0,
+      explanation: '경상남도 합천군에 있는 조선 전기 사찰 건물입니다.',
+      source: { title: '한국민족문화대백과사전 「합천 해인사 장경판전」', url: 'https://encykorea.aks.ac.kr/Article/E0062725' },
+    },
+    {
+      id: 'kh-08',
+      question: '광개토왕릉비가 세워진 해는?',
+      options: ['372년', '414년', '427년', '475년'],
+      answerIndex: 1,
+      explanation: '장수왕 3년에 아버지의 시신을 왕릉으로 옮기면서 능비를 세웠습니다.',
+      source: { title: '한국민족문화대백과사전 「광개토왕릉비」', url: 'https://encykorea.aks.ac.kr/Article/E0005058' },
+    },
+    {
+      id: 'kh-09',
+      question: '신라에서 혈통에 따라 관직과 일상생활을 제한한 신분 제도는?',
+      options: ['골품제도', '음서제도', '과거제도', '상수리제도'],
+      answerIndex: 0,
+      explanation: '성골과 진골, 6두품에서 1두품까지 모두 8개 신분계급으로 나뉘었습니다.',
+      source: { title: '한국민족문화대백과사전 「골품제도」', url: 'https://encykorea.aks.ac.kr/Article/E0004196' },
+    },
+    {
+      id: 'kh-10',
+      question: '갑오개혁이 시작된 해는?',
+      options: ['1876년', '1884년', '1894년', '1905년'],
+      answerIndex: 2,
+      explanation: '고종 31년 7월부터 1896년 2월까지 추진된 일련의 개혁 운동입니다.',
+      source: { title: '한국민족문화대백과사전 「갑오개혁」', url: 'https://encykorea.aks.ac.kr/Article/E0000925' },
+    },
+  ],
+  'world-geography': [],
+  'science': [],
+  'arts-culture': [],
+};
