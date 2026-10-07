@@ -143,7 +143,7 @@ PRD §4.3 허용 출처(국가유산청, 국사편찬위원회, 한국민족문�
 아직 `index.html`이 없으므로 Node로 확인한다.
 
 ```bash
-node -e "eval(require('fs').readFileSync('questions.js','utf8')); const q=QUESTIONS['korean-history']; console.log(q.length, new Set(q.map(x=>x.id)).size, q.every(x=>x.options.length===4 && Number.isInteger(x.answerIndex) && x.answerIndex>=0 && x.answerIndex<=3 && !!x.source.url));"
+node -e "const fs=require('fs'); const d=eval(fs.readFileSync('questions.js','utf8')+';({CATEGORIES,QUESTIONS})'); const q=d.QUESTIONS['korean-history']; console.log(q.length, new Set(q.map(x=>x.id)).size, q.every(x=>x.options.length===4 && Number.isInteger(x.answerIndex) && x.answerIndex>=0 && x.answerIndex<=3 && !!x.source.url));"
 ```
 
 기대 출력: `10 10 true`
