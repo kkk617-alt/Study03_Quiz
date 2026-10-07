@@ -146,6 +146,22 @@ function sourceHost(url) {
   }
 }
 
+// 정수면 소수점을 붙이지 않는다 (PRD §2.3). toFixed(1) 한 줄로 끝내면 8 이 8.0 이 된다.
+function formatScore(n) {
+  return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
+}
+
+// MODES 테이블을 읽어 점수를 낸다. 모드 이름으로 분기하지 않는다 (PRD §5.4).
+// hintedScore 가 null 인 모드는 힌트 개념이 없으므로 correctScore 를 쓴다.
+function scoreFor(mode, correct, hintUsed) {
+  const config = MODES[mode];
+  if (!config || !correct) return 0;
+  if (hintUsed && config.hintedScore !== null && config.hintedScore !== undefined) {
+    return config.hintedScore;
+  }
+  return config.correctScore;
+}
+
 // ---- 5. 덱 생성 (buildDeck) (PRD §3.8.1) ----
 
 // 문항 순서를 섞고, 문항마다 보기를 섞은 뒤 정답의 새 위치를 다시 계산한다.
@@ -197,6 +213,7 @@ function render() {
   }
   if (state.screen === 'home') renderHome();
   else if (state.screen === 'quiz') renderQuiz();
+  else if (state.screen === 'result') renderResult();
 }
 
 function renderHome() {
@@ -279,6 +296,13 @@ function setText(id, text) {
   if (el) el.textContent = text;
 }
 
+// 만점은 모든 모드에서 10점이다 (PRD §2.3).
+function renderResult() {
+  setText('result-score', formatScore(state.score) + ' / ' + QUESTIONS_PER_CATEGORY);
+  setText('result-label', categoryName(state.categoryId) + ' · ' +
+    MODES[state.mode].label + ' 모드');
+}
+
 // ---- 7. 이벤트 핸들러 ----
 
 function startRound(mode, categoryId) {
@@ -313,6 +337,7 @@ function selectOption(index) {
     correct: correct,
     hintUsed: state.hintUsed,
   });
+  state.score += scoreFor(state.mode, correct, state.hintUsed);
   state.phase = 'explaining';
   render();
 }
@@ -352,6 +377,17 @@ function init() {
 
   const next = document.getElementById('next-btn');
   if (next) next.addEventListener('click', nextQuestion);
+
+  const retry = document.getElementById('retry-btn');
+  if (retry) retry.addEventListener('click', function () {
+    startRound(state.mode, state.categoryId);
+  });
+
+  const home = document.getElementById('home-btn');
+  if (home) home.addEventListener('click', function () {
+    state.screen = 'home';
+    render();
+  });
 
   state.screen = 'home';
   render();

@@ -161,3 +161,22 @@ button.next {
   text-align: center;
   font-weight: 600;
 }
+
+/* ---- 결과 화면 ---- */
+
+.result-score {
+  margin: 0 0 4px;
+  font-size: 2.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.round-label { margin: 0 0 20px; color: var(--muted); }
+
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.button-row button { text-align: center; }
