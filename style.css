@@ -219,3 +219,13 @@ button.next {
 .question,
 button.option,
 .explanation { overflow-wrap: break-word; }
+
+/* 연습 모드 안내 — 순위표에 기록되지 않음 (PRD §2.2, §3.2) */
+/* 버튼과 같은 흰 박스로 두면 입력창처럼 보인다. 왼쪽 띠만 둔 안내문으로 쓴다. */
+.notice {
+  margin: 0 0 16px;
+  padding: 4px 0 4px 10px;
+  border-left: 3px solid var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}

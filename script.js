@@ -217,6 +217,14 @@ function render() {
 }
 
 function renderHome() {
+  // 순위표 기록 여부는 모드 이름이 아니라 MODES 테이블로 판단한다 (PRD §2.2, §3.2, §5.4).
+  const notice = document.getElementById('unranked-notice');
+  if (notice) {
+    const mode = MODES[state.mode];
+    notice.textContent = mode.label + ' 모드 · 순위표에 기록되지 않음';
+    notice.hidden = mode.ranked;
+  }
+
   const list = document.getElementById('category-list');
   if (!list) return;
   list.innerHTML = '';
