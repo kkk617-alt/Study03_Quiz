@@ -180,3 +180,42 @@ button.next {
 }
 
 .button-row button { text-align: center; }
+
+/* ---- 좁은 화면 (360px까지) ---- */
+/* 고정 폭·고정 높이를 쓰지 않는다. 버튼은 세로로 쌓이고 폭을 꽉 채운다. */
+
+@media (max-width: 480px) {
+  body {
+    padding: 16px 16px 32px;
+    font-size: 15px;
+  }
+
+  h1 { font-size: 1.35rem; }
+
+  .lead { margin-bottom: 16px; }
+
+  /* 카테고리 버튼을 한 줄에 하나씩 */
+  .button-grid { grid-template-columns: 1fr; }
+
+  .quiz-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .question { font-size: 1.1rem; }
+
+  .explain { padding: 14px; }
+
+  .result-score { font-size: 2rem; }
+
+  /* 결과 화면 버튼도 세로로 */
+  .button-row { flex-direction: column; }
+}
+
+/* 긴 출처 도메인은 좁은 폭에서 줄바꿈한다. 한국어 본문은 어절 단위로 끊는다. */
+.source { overflow-wrap: anywhere; }
+
+.question,
+button.option,
+.explanation { overflow-wrap: break-word; }
