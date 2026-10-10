@@ -3,7 +3,9 @@
 
 // ---- 1. MODES 설정 테이블 (PRD §5.4) ----
 // 모드 차이는 코드 분기가 아니라 이 테이블의 데이터로 표현한다.
-// speed / hint 는 Task 9 가 채운다.
+// 모드 규칙(PRD §2.2)과 점수 규칙(PRD §2.3)의 구현상 단일 출처다. 규칙이 바뀌면 여기만 고친다.
+// timeLimit 은 문항당 제한 시간(초), null 이면 제한 없음.
+// hintedScore 는 힌트를 쓰고 맞혔을 때 점수, null 이면 그 모드에 힌트 개념이 없다.
 
 const MODES = {
   practice: {
@@ -14,6 +16,24 @@ const MODES = {
     hintedScore: null,
     ranked: false,
     retryWrong: true,
+  },
+  speed: {
+    label: '스피드',
+    timeLimit: 15,
+    hintAllowed: false,
+    correctScore: 1,
+    hintedScore: null,
+    ranked: true,
+    retryWrong: false,
+  },
+  hint: {
+    label: '힌트',
+    timeLimit: null,
+    hintAllowed: true,
+    correctScore: 1,
+    hintedScore: 0.5,
+    ranked: true,
+    retryWrong: false,
   },
 };
 
@@ -223,6 +243,7 @@ function render() {
 }
 
 function renderHome() {
+  renderModeList();
   renderUnrankedNotice('unranked-notice', true);
 
   const list = document.getElementById('category-list');
@@ -237,7 +258,32 @@ function renderHome() {
     button.dataset.categoryId = category.id;
     button.disabled = dataBlocked;
     button.addEventListener('click', function () {
-      startRound('practice', category.id);
+      startRound(state.mode, category.id);
+    });
+    list.appendChild(button);
+  }
+}
+
+// 모드 이름을 코드에 적지 않고 MODES[key].label 에서 읽는다. 모드를 더해도 이 함수는 그대로다.
+function renderModeList() {
+  const list = document.getElementById('mode-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const keys = Object.keys(MODES);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = MODES[key].label;
+    button.dataset.mode = key;
+
+    const selected = key === state.mode;
+    button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    if (selected) button.classList.add('is-selected');
+
+    button.addEventListener('click', function () {
+      selectMode(key);
     });
     list.appendChild(button);
   }
@@ -365,6 +411,13 @@ function deckItemById(questionId) {
 }
 
 // ---- 7. 이벤트 핸들러 ----
+
+// 모드를 고르는 것만으로 라운드가 시작되지 않는다. 시작은 카테고리를 고를 때다 (PRD §3.2).
+function selectMode(mode) {
+  if (!MODES[mode]) return;
+  state.mode = mode;
+  render();
+}
 
 function startRound(mode, categoryId) {
   if (dataBlocked) return;

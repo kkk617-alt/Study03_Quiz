@@ -77,6 +77,28 @@ button {
 
 button:hover:not(:disabled) { border-color: var(--accent); }
 
+/* 고른 모드를 눈에 보이게 표시한다 (PRD §3.2). */
+button.is-selected {
+  border-color: var(--accent);
+  background: #eaf0fd;
+  font-weight: 600;
+}
+
+/* 모드 라벨은 짧으므로 360px 에서도 한 줄에 3개를 유지한다. */
+.mode-grid {
+  flex-direction: row;
+  gap: 8px;
+  margin: 4px 0 20px;
+}
+
+.mode-grid button { text-align: center; }
+
+.field-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
