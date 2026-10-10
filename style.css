@@ -222,6 +222,23 @@ button.next {
 
 .round-label { margin: 0 0 20px; color: var(--muted); }
 
+/* 복습 결과는 원점수와 섞이지 않게 따로 적는다 (PRD §3.8.4). */
+.review-line {
+  margin: -12px 0 20px;
+  font-weight: 600;
+}
+
+.review-line.is-all-correct {
+  margin: 0 0 16px;
+  color: #1f7a45;
+}
+
+button.review {
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
 .button-row {
   display: flex;
   gap: 10px;

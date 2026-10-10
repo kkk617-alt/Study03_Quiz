@@ -196,7 +196,13 @@ function scoreFor(mode, correct, hintUsed) {
 // QUESTIONS 원본은 건드리지 않는다.
 function buildDeck(categoryId) {
   const source = Array.isArray(QUESTIONS[categoryId]) ? QUESTIONS[categoryId] : [];
-  const ordered = shuffle(source);
+  return buildDeckFrom(source);
+}
+
+// 복습 라운드도 문항·보기를 다시 섞는다 (PRD §3.8.4). 섞기 로직을 두 번 쓰지 않도록
+// 문항 배열을 인자로 받는 이 함수를 buildDeck 과 buildReviewDeck 이 공유한다.
+function buildDeckFrom(questions) {
+  const ordered = shuffle(questions);
   const deck = [];
 
   for (let i = 0; i < ordered.length; i++) {
@@ -219,6 +225,28 @@ function buildDeck(categoryId) {
   }
 
   return deck;
+}
+
+// 틀린 문항만 모아 새 덱을 만든다. 원본 문항에서 다시 뽑으므로 보기 순서도 새로 섞인다.
+function buildReviewDeck(answers) {
+  const wrong = [];
+  for (let i = 0; i < answers.length; i++) {
+    if (answers[i].correct) continue;
+    const question = questionById(answers[i].questionId);
+    if (question) wrong.push(question);
+  }
+  return buildDeckFrom(wrong);
+}
+
+function questionById(questionId) {
+  for (let c = 0; c < CATEGORIES.length; c++) {
+    const list = QUESTIONS[CATEGORIES[c].id];
+    if (!Array.isArray(list)) continue;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === questionId) return list[i];
+    }
+  }
+  return null;
 }
 
 // ---- 6. 렌더 함수 ----
@@ -404,12 +432,48 @@ function setText(id, text) {
 }
 
 // 만점은 모든 모드에서 10점이다 (PRD §2.3).
+// 복습 라운드 뒤에는 위쪽 점수가 원점수(baseScore)여야 한다 — 복습 점수를 더하지 않는다.
 function renderResult() {
-  setText('result-score', formatScore(state.score) + ' / ' + QUESTIONS_PER_CATEGORY);
+  const headline = state.reviewRound ? state.baseScore : state.score;
+  setText('result-score', formatScore(headline) + ' / ' + QUESTIONS_PER_CATEGORY);
   setText('result-label', categoryName(state.categoryId) + ' · ' +
     MODES[state.mode].label + ' 모드');
   renderUnrankedNotice('result-unranked');
   renderResultList();
+  renderReviewArea();
+}
+
+// 복습 제공 여부는 모드 이름이 아니라 MODES[...].retryWrong 으로 판단한다 (PRD §5.4).
+// 틀린 문항이 0개면 버튼을 숨기고 '모두 정답' 을 보여 준다 (PRD §3.9.3).
+function renderReviewArea() {
+  const allowed = MODES[state.mode].retryWrong === true;
+  const wrong = countWrong(state.answers);
+
+  const button = document.getElementById('review-btn');
+  if (button) {
+    button.hidden = !allowed || wrong === 0;
+    button.textContent = '틀린 문제 다시 풀기 (' + wrong + '문항)';
+  }
+
+  const allCorrect = document.getElementById('all-correct');
+  if (allCorrect) allCorrect.hidden = !allowed || wrong > 0;
+
+  const line = document.getElementById('review-result');
+  if (line) {
+    const show = allowed && state.reviewRound;
+    line.hidden = !show;
+    line.textContent = show
+      ? '복습: ' + state.deck.length + '문항 중 ' + (state.answers.length - wrong) + '문항 정답'
+      : '';
+  }
+}
+
+function countWrong(answers) {
+  let wrong = 0;
+  for (let i = 0; i < answers.length; i++) {
+    if (!answers[i].correct) wrong += 1;
+  }
+  return wrong;
 }
 
 // 한 판에서 문항마다 맞혔는지와 정답을 보여 준다 (노트 5.3.2.5).
@@ -469,6 +533,27 @@ function startRound(mode, categoryId) {
   state.deadline = null;
   state.reviewRound = false;
   state.baseScore = null;
+  state.screen = 'quiz';
+  render();
+  startTimer();
+}
+
+// 복습 라운드는 원점수를 건드리지 않는다 (PRD §3.8.4).
+// baseScore 는 첫 복습에서 한 번만 저장한다 — 두 번째 복습이 복습 점수로 덮어쓰면
+// 원점수가 실력 지표 기능을 잃는다 (Review Focus 3).
+function startReviewRound() {
+  const deck = buildReviewDeck(state.answers);
+  if (deck.length === 0) return;
+
+  if (state.baseScore === null) state.baseScore = state.score;
+  state.deck = deck;
+  state.index = 0;
+  state.score = 0;
+  state.answers = [];
+  state.phase = 'answering';
+  state.hintUsed = false;
+  state.hintRemoved = [];
+  state.reviewRound = true;
   state.screen = 'quiz';
   render();
   startTimer();
@@ -626,6 +711,9 @@ function init() {
 
   const hint = document.getElementById('hint-btn');
   if (hint) hint.addEventListener('click', useHint);
+
+  const review = document.getElementById('review-btn');
+  if (review) review.addEventListener('click', startReviewRound);
 
   const retry = document.getElementById('retry-btn');
   if (retry) retry.addEventListener('click', function () {
