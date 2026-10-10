@@ -48,13 +48,19 @@ function isFilled(value) {
 
 // 사람이 읽을 수 있는 오류 문자열의 배열을 돌려준다. 빈 배열이면 통과.
 // 문제를 하나 찾고 멈추지 않는다 — 전체 목록을 모아 돌려준다.
-function validateQuestions() {
+// 인자를 주지 않으면 실제 QUESTIONS 를 본다. 자체 점검(§11)은 가짜 데이터를 넣어 부른다.
+function validateQuestions(questions) {
+  const data = questions === undefined ? QUESTIONS : questions;
   const errors = [];
   const seenIds = {};
 
+  if (!data || typeof data !== 'object') {
+    return ['문항 데이터가 객체가 아닙니다'];
+  }
+
   for (let c = 0; c < CATEGORIES.length; c++) {
     const categoryId = CATEGORIES[c].id;
-    const list = QUESTIONS[categoryId];
+    const list = data[categoryId];
 
     if (!Array.isArray(list)) {
       errors.push(categoryId + ': QUESTIONS 에 이 카테고리의 문항 배열이 없습니다');
@@ -247,6 +253,7 @@ function renderQuiz() {
 
   setText('progress', (state.index + 1) + ' / ' + state.deck.length);
   setText('round-label', categoryName(state.categoryId) + ' · ' + MODES[state.mode].label);
+  setText('score', '점수 ' + formatScore(state.score));
   setText('question-text', item.question);
 
   const list = document.getElementById('option-list');
@@ -268,7 +275,11 @@ function renderQuiz() {
       feedback.classList.add(record.correct ? 'is-correct' : 'is-wrong');
     }
     setText('explanation', item.explanation);
-    setText('source', '출처: ' + item.source.title + ' · ' + sourceHost(item.source.url));
+    const sourceLink = document.getElementById('source-link');
+    if (sourceLink) {
+      sourceLink.textContent = item.source.title;
+      sourceLink.href = item.source.url;
+    }
     setText('next-btn', state.index === state.deck.length - 1 ? '결과 보기' : '다음');
   }
 }
@@ -316,6 +327,41 @@ function renderResult() {
   setText('result-label', categoryName(state.categoryId) + ' · ' +
     MODES[state.mode].label + ' 모드');
   renderUnrankedNotice('result-unranked');
+  renderResultList();
+}
+
+// 한 판에서 문항마다 맞혔는지와 정답을 보여 준다 (노트 5.3.2.5).
+function renderResultList() {
+  const list = document.getElementById('result-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  for (let i = 0; i < state.answers.length; i++) {
+    const answer = state.answers[i];
+    const item = deckItemById(answer.questionId);
+
+    const li = document.createElement('li');
+    li.classList.add(answer.correct ? 'result-correct' : 'result-wrong');
+
+    const question = document.createElement('p');
+    question.textContent = item ? item.question : answer.questionId;
+
+    const detail = document.createElement('p');
+    detail.classList.add('result-detail');
+    detail.textContent = (answer.correct ? '정답' : '오답') + ' · 정답: ' +
+      (item ? item.options[item.answerIndex] : '');
+
+    li.appendChild(question);
+    li.appendChild(detail);
+    list.appendChild(li);
+  }
+}
+
+function deckItemById(questionId) {
+  for (let i = 0; i < state.deck.length; i++) {
+    if (state.deck[i].id === questionId) return state.deck[i];
+  }
+  return null;
 }
 
 // ---- 7. 이벤트 핸들러 ----
@@ -410,4 +456,221 @@ function init() {
 
 if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('DOMContentLoaded', init);
+}
+
+// ---- 11. 자체 점검 (주소 끝에 ?test) ----
+// 눈으로 안 보이는 로직을 브라우저에서 바로 확인한다. 결과는 콘솔에만 찍는다.
+// 파일을 늘리지 않으려고 앱 안에 두었다 (PRD §7).
+
+const SELF_TESTS = [];
+
+function selfTest(name, run) {
+  SELF_TESTS.push({ name: name, run: run });
+}
+
+function runSelfTests() {
+  let passed = 0;
+  let failed = 0;
+
+  for (let i = 0; i < SELF_TESTS.length; i++) {
+    const test = SELF_TESTS[i];
+    const failures = [];
+    const check = function (condition, message) {
+      if (!condition) failures.push(message);
+    };
+    try {
+      test.run(check);
+    } catch (error) {
+      failures.push('예외: ' + error.message);
+    }
+    if (failures.length === 0) {
+      passed += 1;
+      console.log('통과: ' + test.name);
+    } else {
+      failed += 1;
+      console.error('실패: ' + test.name + '\n  - ' + failures.join('\n  - '));
+    }
+  }
+
+  console.log('자체 점검 결과: 통과 ' + passed + ', 실패 ' + failed);
+  return { passed: passed, failed: failed };
+}
+
+// 점검용 가짜 문항 묶음. 실제 QUESTIONS 를 건드리지 않는다.
+function sampleSet() {
+  const data = {};
+  for (let c = 0; c < CATEGORIES.length; c++) {
+    const key = CATEGORIES[c].id;
+    data[key] = [];
+    for (let i = 1; i <= QUESTIONS_PER_CATEGORY; i++) {
+      const id = key + '-' + (i < 10 ? '0' + i : String(i));
+      data[key].push({
+        id: id,
+        question: id + ' 문제',
+        options: ['보기 하나', '보기 둘', '보기 셋', '보기 넷'],
+        answerIndex: 0,
+        explanation: '점검용 해설 한 줄.',
+        source: { title: '점검용 출처', url: 'https://example.org/' + id },
+      });
+    }
+  }
+  return data;
+}
+
+selfTest('shuffle은 같은 원소를 모두 담은 새 배열을 반환한다', function (check) {
+  const input = [1, 2, 3, 4, 5, 6, 7, 8];
+  const out = shuffle(input);
+  check(out !== input, '같은 배열 참조를 돌려줌');
+  check(input.join(',') === '1,2,3,4,5,6,7,8', '입력 배열이 바뀜');
+  check(out.slice().sort().join(',') === input.slice().sort().join(','), '원소 집합이 달라짐');
+});
+
+selfTest('shuffle은 random 값에 따라 순서를 바꾼다', function (check) {
+  const realRandom = Math.random;
+  try {
+    Math.random = function () { return 0; };
+    const low = shuffle([1, 2, 3, 4, 5]).join(',');
+    Math.random = function () { return 0.999999; };
+    const high = shuffle([1, 2, 3, 4, 5]).join(',');
+    check(low !== high, 'random 값을 바꿔도 결과가 같음');
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+selfTest('buildDeck은 해당 카테고리 문항만 모두 담는다', function (check) {
+  for (let c = 0; c < CATEGORIES.length; c++) {
+    const key = CATEGORIES[c].id;
+    const deck = buildDeck(key);
+    const want = QUESTIONS[key].map(function (q) { return q.id; }).sort().join(',');
+    const got = deck.map(function (d) { return d.id; }).sort().join(',');
+    check(deck.length === QUESTIONS[key].length, key + ': 문항 수가 다름');
+    check(got === want, key + ': 문항 구성이 다름');
+  }
+});
+
+selfTest('buildDeck은 보기를 섞어도 정답 위치를 맞게 다시 계산한다', function (check) {
+  for (let run = 0; run < 20; run++) {
+    for (let c = 0; c < CATEGORIES.length; c++) {
+      const key = CATEGORIES[c].id;
+      const deck = buildDeck(key);
+      for (let i = 0; i < deck.length; i++) {
+        const d = deck[i];
+        const origin = QUESTIONS[key].filter(function (q) { return q.id === d.id; })[0];
+        check(d.options[d.answerIndex] === origin.options[origin.answerIndex],
+          d.id + ': 정답 보기가 바뀜');
+        check(d.options.slice().sort().join('|') === origin.options.slice().sort().join('|'),
+          d.id + ': 보기 집합이 바뀜');
+      }
+    }
+  }
+});
+
+selfTest('buildDeck은 원본 문항을 바꾸지 않는다', function (check) {
+  const before = JSON.stringify(QUESTIONS);
+  for (let i = 0; i < 10; i++) {
+    for (let c = 0; c < CATEGORIES.length; c++) buildDeck(CATEGORIES[c].id);
+  }
+  check(JSON.stringify(QUESTIONS) === before, 'QUESTIONS 가 바뀜');
+});
+
+selfTest('scoreFor: 맞히면 1점, 틀리면 0점', function (check) {
+  check(scoreFor('practice', true, false) === 1, '정답이 1점이 아님');
+  check(scoreFor('practice', false, false) === 0, '오답이 0점이 아님');
+  check(scoreFor('practice', false, true) === 0, '힌트를 쓴 오답이 0점이 아님');
+});
+
+selfTest('formatScore: 정수에 소수점을 붙이지 않는다', function (check) {
+  check(formatScore(0) === '0', 'formatScore(0) 이 "0" 이 아님');
+  check(formatScore(7) === '7', 'formatScore(7) 이 "7" 이 아님');
+  check(formatScore(10) === '10', 'formatScore(10) 이 "10" 이 아님');
+  check(formatScore(7.5) === '7.5', 'formatScore(7.5) 가 "7.5" 가 아님');
+  check(formatScore(0.5) === '0.5', 'formatScore(0.5) 가 "0.5" 가 아님');
+});
+
+selfTest('validateQuestions: 올바른 40문항은 오류가 없다', function (check) {
+  const errors = validateQuestions(sampleSet());
+  check(errors.length === 0, '오류가 나옴: ' + errors.join(' / '));
+});
+
+selfTest('validateQuestions: 카테고리마다 문항 수가 다르면 오류', function (check) {
+  const key = CATEGORIES[0].id;
+  const few = sampleSet();
+  few[key].pop();
+  check(validateQuestions(few).some(function (e) { return e.indexOf(key) === 0; }),
+    '문항 9개가 통과됨');
+
+  const many = sampleSet();
+  many[key].push(many[key][0]);
+  check(validateQuestions(many).length > 0, '문항 11개가 통과됨');
+
+  const missing = sampleSet();
+  missing[key] = null;
+  check(validateQuestions(missing).some(function (e) { return e.indexOf('문항 배열이 없습니다') !== -1; }),
+    '문항 배열이 없는데 통과됨');
+
+  check(validateQuestions(null).length > 0, 'null 이 통과됨');
+});
+
+selfTest('validateQuestions: 보기 수, 빈 보기, answerIndex 범위를 검사한다', function (check) {
+  const key = CATEGORIES[0].id;
+
+  const three = sampleSet();
+  three[key][0].options = ['하나', '둘', '셋'];
+  check(validateQuestions(three).some(function (e) { return e.indexOf('options') !== -1; }),
+    '보기 3개가 통과됨');
+
+  const blank = sampleSet();
+  blank[key][1].options[2] = '   ';
+  check(validateQuestions(blank).some(function (e) { return e.indexOf('비어 있습니다') !== -1; }),
+    '빈 보기가 통과됨');
+
+  const outOfRange = sampleSet();
+  outOfRange[key][2].answerIndex = 4;
+  check(validateQuestions(outOfRange).some(function (e) { return e.indexOf('answerIndex') !== -1; }),
+    'answerIndex 4 가 통과됨');
+
+  const notInteger = sampleSet();
+  notInteger[key][3].answerIndex = '1';
+  check(validateQuestions(notInteger).some(function (e) { return e.indexOf('answerIndex') !== -1; }),
+    '문자열 answerIndex 가 통과됨');
+});
+
+selfTest('validateQuestions: 필수 항목, id 중복, 출처를 검사한다', function (check) {
+  const key = CATEGORIES[0].id;
+  const other = CATEGORIES[1].id;
+
+  const noExplanation = sampleSet();
+  noExplanation[key][0].explanation = '';
+  check(validateQuestions(noExplanation).some(function (e) { return e.indexOf('explanation') !== -1; }),
+    '빈 해설이 통과됨');
+
+  const duplicateId = sampleSet();
+  duplicateId[other][0].id = duplicateId[key][0].id;
+  check(validateQuestions(duplicateId).some(function (e) { return e.indexOf('중복') !== -1; }),
+    'id 중복이 통과됨');
+
+  const noTitle = sampleSet();
+  noTitle[key][1].source.title = '';
+  check(validateQuestions(noTitle).some(function (e) { return e.indexOf('source.title') !== -1; }),
+    '출처 이름 없음이 통과됨');
+
+  const noUrl = sampleSet();
+  noUrl[key][2].source.url = '';
+  check(validateQuestions(noUrl).some(function (e) { return e.indexOf('source.url') !== -1; }),
+    '출처 주소 없음이 통과됨');
+});
+
+selfTest('실제 문항 데이터(QUESTIONS)가 규칙을 통과한다', function (check) {
+  const errors = validateQuestions();
+  check(errors.length === 0, '오류 ' + errors.length + '건: ' + errors.join(' / '));
+
+  let total = 0;
+  for (let c = 0; c < CATEGORIES.length; c++) total += QUESTIONS[CATEGORIES[c].id].length;
+  check(total === CATEGORIES.length * QUESTIONS_PER_CATEGORY, '전체 문항이 ' + total + '개');
+});
+
+// 주소 끝에 ?test 가 있으면 점검을 돌린다 (노트 5.3.2.8).
+if (typeof location !== 'undefined' && /[?&]test\b/.test(location.search)) {
+  runSelfTests();
 }

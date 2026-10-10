@@ -51,8 +51,9 @@ PRD가 요구하지만 각 과제의 기본 확인 절차만으로는 드러나�
 
 ## 검증 방식에 관한 메모
 
-PRD §7.2·§8은 파일 4개 제약 때문에 자동 테스트 러너(`test.html`)를 범위 밖으로 둔다. 따라서 이 계획의 검증 단계는 두 종류다.
+PRD §7.2·§8은 파일 4개 제약 때문에 별도 테스트 파일(`test.html`)을 범위 밖으로 둔다. 대신 점검을 앱 안에 넣는다. 이 계획의 검증 단계는 세 종류다.
 
+- **자체 점검 (`?test`)** — 주소 끝에 `?test`를 붙이면 `script.js`가 점검 항목을 실행하고 콘솔에 `자체 점검 결과: 통과 N, 실패 M`을 찍는다 (PRD §7.2). 1단계의 점검 항목은 12개다.
 - **콘솔 검증** — DevTools 콘솔에 붙여넣는 한 줄 표현식. 파일을 추가하지 않으므로 4파일 제약을 지키면서 섞기·점수·힌트·정렬처럼 눈으로 안 보이는 부분을 확인한다. 각 단계에 기대 출력이 명시된다.
 - **브라우저 확인** — 각 단계 끝의 체크리스트. 사람이 직접 클릭해서 본다.
 
@@ -100,15 +101,16 @@ git init && git add PRD.md IMPL-PLAN.md && git commit -m "docs: add PRD and impl
 1단계가 끝나면 아래를 순서대로 해 본다.
 
 1. 파일 탐색기에서 `index.html`을 더블클릭한다. 주소창이 `file:///C:/Users/Study03_Quiz/index.html`이고 시작 화면에 카테고리 4개가 보인다.
-2. `한국사`를 누른다. `1 / 10`과 문항, 보기 4개가 보인다.
-3. **일부러 틀린 보기**를 고른다. 화면이 바뀌지 않고 그 자리에 `✗ 오답`, 내가 고른 보기와 정답 보기가 다르게 표시되고, 한 줄 해설과 그 아래 작은 글씨 출처가 나온다.
+2. `한국사`를 누른다. 상단에 `한국사 · 연습`, `1 / 10`, `점수 0`이 보이고 문항과 보기 4개가 나온다.
+3. **일부러 틀린 보기**를 고른다. 화면이 바뀌지 않고 그 자리에 `✗ 오답`, 고른 보기는 빨간색·정답 보기는 초록색으로 표시되고, 한 줄 해설과 그 아래 작은 글씨 출처 링크가 나온다. 출처 링크를 누르면 새 탭에서 출처가 열린다.
 4. 해설이 뜬 상태에서 **다른 보기를 여러 번 클릭**한다. 아무 일도 일어나지 않고 해설도 점수도 바뀌지 않는다.
 5. `[다음]`을 눌러 10문항까지 간다. 마지막 문항의 버튼이 `[결과 보기]`로 바뀌어 있다.
-6. 결과 화면 점수가 내가 맞힌 개수와 일치한다. 정수면 소수점이 붙지 않는다.
-7. `다시 하기`를 누른다. 문항 순서와 보기 순서가 방금과 다르다. 점수는 0부터 다시 시작한다.
+6. 결과 화면 점수가 내가 맞힌 개수와 일치한다. 정수면 소수점이 붙지 않는다. 그 아래 문항별 정답·오답 목록이 보인다.
+7. `같은 모드 다시`를 누른다. 문항 순서와 보기 순서가 방금과 다르다. 점수는 0부터 다시 시작한다. `처음으로`를 누르면 시작 화면으로 돌아간다.
 8. 나머지 카테고리 3개도 각각 눌러 10문항이 뜨는지 본다.
 9. 브라우저 창 폭을 360px까지 좁힌다. 긴 보기 텍스트가 버튼을 넘치거나 가로 스크롤을 만들지 않는다.
-10. `questions.js`에서 아무 문항의 `answerIndex`를 `9`로 바꾸고 새로 고친다. 시작 화면에 `문항 데이터에 오류가 있습니다`가 뜨고 카테고리 버튼이 눌리지 않으며, F12 콘솔에 어느 문항이 왜 잘못됐는지 목록이 찍힌다. 값을 되돌린다.
+10. 주소 끝에 `?test`를 붙여 새로 고치고 F12 콘솔을 본다. `자체 점검 결과: 통과 12, 실패 0`이 찍힌다.
+11. `questions.js`에서 아무 문항의 `answerIndex`를 `9`로 바꾸고 새로 고친다. 시작 화면에 `문항 데이터에 오류가 있습니다`가 뜨고 카테고리 버튼이 눌리지 않으며, F12 콘솔에 어느 문항이 왜 잘못됐는지 목록이 찍힌다. 값을 되돌린다.
 
 ---
 
@@ -310,11 +312,11 @@ git add index.html style.css script.js && git commit -m "feat: add deck shufflin
 - Produces: `scoreFor(mode: string, correct: boolean, hintUsed: boolean) -> number` — `MODES[mode]`를 읽어 점수를 낸다. 오답은 항상 0. 힌트 사용 정답은 `hintedScore`, 아니면 `correctScore`. 모드 이름으로 분기하지 않는다.
 - Produces: `formatScore(n: number) -> string` — 정수면 `'8'`, 소수면 `'7.5'`. 정수에 소수점을 붙이지 않는다.
 - Produces: `renderResult() -> void`.
-- Produces: `index.html`의 id — `#result-score`, `#result-label`, `#retry-btn`(다시 하기), `#home-btn`(시작으로).
+- Produces: `index.html`의 id — `#result-score`, `#result-label`, `#result-list`(문항별 정답·오답 목록), `#retry-btn`(같은 모드 다시), `#home-btn`(처음으로).
 
 - [ ] **Step 1: 결과 화면 DOM 골격을 추가한다**
 
-점수 표시, 모드·카테고리 라벨, `다시 하기` 버튼, `시작으로` 버튼. 복습 영역은 Task 12에서 추가한다.
+점수 표시, 모드·카테고리 라벨, 문항별 정답·오답 목록, `같은 모드 다시` 버튼, `처음으로` 버튼. 복습 영역은 Task 12에서 추가한다.
 
 - [ ] **Step 2: `formatScore()`를 구현한다**
 
@@ -326,7 +328,7 @@ git add index.html style.css script.js && git commit -m "feat: add deck shufflin
 
 - [ ] **Step 4: `renderResult()`를 구현한다**
 
-`${formatScore(state.score)} / 10` 형식으로 점수를 쓴다. `MODES[state.mode].label`과 카테고리 이름을 함께 표시한다. `다시 하기`는 같은 모드·카테고리로 `startRound`를 다시 부르고, `시작으로`는 `state.screen = 'home'`으로 바꾼다.
+`${formatScore(state.score)} / 10` 형식으로 점수를 쓴다. `MODES[state.mode].label`과 카테고리 이름을 함께 표시하고, 문항별 정답·오답 목록을 그린다. `같은 모드 다시`는 같은 모드·카테고리로 `startRound`를 다시 부르고, `처음으로`는 `state.screen = 'home'`으로 바꾼다.
 
 - [ ] **Step 5: 점수 서식을 콘솔로 확인한다** (Review Focus 5)
 
@@ -340,9 +342,9 @@ git add index.html style.css script.js && git commit -m "feat: add deck shufflin
 
 일부러 3문항을 틀리고 7문항을 맞힌다. 기대: 결과 화면이 `7 / 10`. 마지막 문항의 버튼 텍스트가 `결과 보기`였는지 확인한다.
 
-- [ ] **Step 7: `다시 하기` 상태 초기화를 확인한다**
+- [ ] **Step 7: `같은 모드 다시` 상태 초기화를 확인한다**
 
-결과 화면에서 `다시 하기`를 누른 뒤:
+결과 화면에서 `같은 모드 다시`를 누른 뒤:
 
 ```js
 [state.index, state.score, state.answers.length]
@@ -795,7 +797,7 @@ git add index.html style.css script.js && git commit -m "feat: add hint mode wit
 
 - [ ] **Step 5: `startRound()`가 복습 상태를 초기화하는지 확인한다**
 
-`다시 하기`와 새 라운드 시작 시 `reviewRound = false`, `baseScore = null`. Task 3 Step 3에서 이미 넣었으므로 확인만 한다.
+`같은 모드 다시`와 새 라운드 시작 시 `reviewRound = false`, `baseScore = null`. Task 3 Step 3에서 이미 넣었으므로 확인만 한다.
 
 - [ ] **Step 6: 원점수 보존을 콘솔로 확인한다** (Review Focus 3)
 
@@ -970,7 +972,7 @@ git add index.html style.css script.js && git commit -m "feat: add localStorage 
 
 `state.screen = 'leaderboard'`로 바꾸고 `render()`.
 
-- [ ] **Step 2: 순위표 화면 골격과 `시작으로` 버튼을 추가한다**
+- [ ] **Step 2: 순위표 화면 골격과 `처음으로` 버튼을 추가한다**
 
 - [ ] **Step 3: `renderLeaderboard()`를 구현한다**
 

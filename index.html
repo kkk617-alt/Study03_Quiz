@@ -21,15 +21,16 @@
     <!-- 문제 화면 -->
     <section id="screen-quiz" class="screen" hidden>
       <div class="quiz-head">
-        <span id="progress" class="progress"></span>
         <span id="round-label" class="round-label"></span>
+        <span id="progress" class="progress"></span>
+        <span id="score" class="score"></span>
       </div>
       <h2 id="question-text" class="question"></h2>
       <div id="option-list" class="option-list"></div>
       <div id="explain-area" class="explain" hidden>
         <p id="feedback" class="feedback"></p>
         <p id="explanation" class="explanation"></p>
-        <p id="source" class="source"></p>
+        <p class="source">출처: <a id="source-link" target="_blank" rel="noopener noreferrer"></a></p>
         <button id="next-btn" type="button" class="next">다음</button>
       </div>
     </section>
@@ -40,9 +41,10 @@
       <p id="result-score" class="result-score"></p>
       <p id="result-label" class="round-label"></p>
       <p id="result-unranked" class="notice" hidden></p>
+      <ol id="result-list" class="result-list"></ol>
       <div class="button-row">
-        <button id="retry-btn" type="button">다시 하기</button>
-        <button id="home-btn" type="button">시작으로</button>
+        <button id="retry-btn" type="button">같은 모드 다시</button>
+        <button id="home-btn" type="button">처음으로</button>
       </div>
     </section>
 
