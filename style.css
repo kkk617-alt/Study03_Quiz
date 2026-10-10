@@ -119,6 +119,13 @@ button:disabled {
 
 .progress { font-variant-numeric: tabular-nums; }
 
+/* 스피드 모드의 남은 시간. 숫자가 줄어도 폭이 흔들리지 않게 tabular-nums 를 쓴다. */
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 .question {
   margin: 0 0 20px;
   font-size: 1.25rem;

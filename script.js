@@ -300,6 +300,7 @@ function renderQuiz() {
   setText('progress', (state.index + 1) + ' / ' + state.deck.length);
   setText('round-label', categoryName(state.categoryId) + ' · ' + MODES[state.mode].label);
   setText('score', '점수 ' + formatScore(state.score));
+  renderTimer();
   setText('question-text', item.question);
 
   const list = document.getElementById('option-list');
@@ -328,6 +329,27 @@ function renderQuiz() {
     }
     setText('next-btn', state.index === state.deck.length - 1 ? '결과 보기' : '다음');
   }
+}
+
+// 제한 시간이 없는 모드에서는 표시 자체를 숨긴다. 모드 이름으로 분기하지 않는다 (PRD §5.4).
+// 해설 중에는 deadline 이 null 이다 — 그때는 마지막으로 그린 값을 그대로 둔다(타이머 정지).
+function renderTimer() {
+  const el = document.getElementById('timer');
+  if (!el) return;
+
+  const limit = MODES[state.mode].timeLimit;
+  el.hidden = limit === null || limit === undefined;
+  if (el.hidden) {
+    el.textContent = '';
+    return;
+  }
+  if (state.deadline === null) return;
+  setTimerText(Math.ceil(Math.max(0, remainingMs()) / 1000));
+}
+
+function setTimerText(seconds) {
+  const el = document.getElementById('timer');
+  if (el) el.textContent = '남은 시간 ' + seconds + '초';
 }
 
 function buildOptionButton(item, i, explaining, record) {
@@ -435,6 +457,7 @@ function startRound(mode, categoryId) {
   state.baseScore = null;
   state.screen = 'quiz';
   render();
+  startTimer();
 }
 
 // 해설 상태나 시간 초과 뒤의 클릭은 받지 않는다 (PRD §3.4, §3.9.3).
@@ -453,23 +476,97 @@ function selectOption(index) {
   });
   state.score += scoreFor(state.mode, correct, state.hintUsed);
   state.phase = 'explaining';
+  stopTimer();
   render();
 }
 
 function nextQuestion() {
+  stopTimer();
   state.index += 1;
   state.phase = 'answering';
   state.hintUsed = false;
   state.hintRemoved = [];
-  state.deadline = null;
 
   if (state.index >= state.deck.length) {
     state.screen = 'result';
   }
   render();
+  if (state.screen === 'quiz') startTimer();
 }
 
-// ---- 8. 타이머 — Task 10 ----
+// ---- 8. 타이머 (PRD §3.8.2) ----
+
+// 인터벌 핸들은 state 가 아니라 여기 둔다 — state 는 화면이 읽는 데이터다 (PRD §3.7).
+let timerHandle = null;
+const TIMER_TICK_MS = 100;
+
+// 제한 시간이 없는 모드에서는 시간을 재지 않는다. 표시를 숨기는 일은 renderTimer 가 한다.
+function startTimer() {
+  stopTimer();
+  const limit = MODES[state.mode].timeLimit;
+  if (limit === null || limit === undefined) {
+    renderTimer();
+    return;
+  }
+  state.deadline = Date.now() + limit * 1000;
+  timerHandle = setInterval(tickTimer, TIMER_TICK_MS);
+  renderTimer();
+}
+
+// 생애주기 여러 곳에서 부르므로 중복 호출이 안전해야 한다.
+function stopTimer() {
+  if (timerHandle !== null) {
+    clearInterval(timerHandle);
+    timerHandle = null;
+  }
+  state.deadline = null;
+}
+
+// 남은 시간은 tick 횟수가 아니라 deadline 과 현재 시각의 차이로 매번 다시 계산한다.
+// 탭이 비활성이면 브라우저가 인터벌을 늦추므로 호출 횟수는 시간이 아니다 (PRD §3.8.2).
+function tickTimer() {
+  if (state.deadline === null) {
+    stopTimer();
+    return;
+  }
+  if (remainingMs() <= 0) {
+    handleTimeout();
+    return;
+  }
+  renderTimer();
+}
+
+function remainingMs() {
+  return state.deadline === null ? 0 : state.deadline - Date.now();
+}
+
+// 시간 초과는 오답이다. 점수를 더하지 않는다 (PRD §2.3).
+// 해설 상태에서 다시 불려도 두 번 기록하지 않는다.
+function handleTimeout() {
+  if (state.phase !== 'answering') return;
+  const item = state.deck[state.index];
+  if (!item) return;
+
+  state.answers.push({
+    questionId: item.id,
+    chosenIndex: null,
+    correct: false,
+    hintUsed: state.hintUsed,
+  });
+  state.phase = 'explaining';
+  stopTimer();
+  setTimerText(0);
+  render();
+}
+
+// 탭에서 돌아왔을 때. 인터벌이 살아 있으면 100ms 안에 알아서 처리되지만,
+// 브라우저가 인터벌을 완전히 멈춘 경우를 위해 명시적으로 건다 (PRD §3.8.2).
+function handleVisibilityChange() {
+  if (state.screen !== 'quiz' || state.phase !== 'answering') return;
+  if (state.deadline === null) return;
+  if (remainingMs() <= 0) handleTimeout();
+  else renderTimer();
+}
 
 // ---- 9. 순위표 저장/조회 — Task 13·14 ----
 
@@ -499,9 +596,12 @@ function init() {
 
   const home = document.getElementById('home-btn');
   if (home) home.addEventListener('click', function () {
+    stopTimer();
     state.screen = 'home';
     render();
   });
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
   state.screen = 'home';
   render();
