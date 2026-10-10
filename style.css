@@ -8,6 +8,7 @@
   --card: #ffffff;
   --accent: #2b5cd9;
   --danger: #c0392b;
+  --notice-bg: #fff6d9;
   --radius: 10px;
 }
 
@@ -53,17 +54,20 @@ h1 {
   font-weight: 600;
 }
 
+/* 카테고리 버튼은 한 열로 쌓고 폭을 꽉 채운다 (노트 5.3.3.3). */
 .button-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  margin: 16px 0;
 }
 
 button {
   font: inherit;
   color: inherit;
   cursor: pointer;
-  padding: 14px 16px;
+  min-height: 48px;
+  padding: 12px 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--card);
@@ -195,9 +199,6 @@ button.next {
 
   .lead { margin-bottom: 16px; }
 
-  /* 카테고리 버튼을 한 줄에 하나씩 */
-  .button-grid { grid-template-columns: 1fr; }
-
   .question { font-size: 1.1rem; }
 
   .explain { padding: 14px; }
@@ -216,13 +217,13 @@ button.option,
 .explanation { overflow-wrap: break-word; }
 
 /* 연습 모드 안내 — 순위표에 기록되지 않음 (PRD §2.2, §3.2) */
-/* 버튼과 같은 흰 박스로 두면 입력창처럼 보인다. 왼쪽 띠만 둔 안내문으로 쓴다. */
+/* 연한 노란 상자 (노트 5.3.3.3). 흰 박스로 두면 입력창처럼 보인다. */
 .notice {
-  margin: 0 0 16px;
-  padding: 4px 0 4px 10px;
-  border-left: 3px solid var(--line);
-  color: var(--muted);
-  font-size: 0.85rem;
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--notice-bg);
+  font-size: 0.95rem;
 }
 
 /* ---- 노트 5.3.2 에 맞춘 표시 ---- */
