@@ -163,6 +163,20 @@ button.option.is-chosen-wrong {
   text-decoration: line-through;
 }
 
+/* 힌트로 지운 보기. 자리는 그대로 두고 지워진 것처럼 보이게 한다 (PRD §3.8.3). */
+button.option.is-removed {
+  color: var(--muted);
+  background: #f1f1f3;
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+/* 힌트 버튼은 힌트 모드에서만 보인다 (PRD §3.3). */
+button.hint {
+  margin-top: 12px;
+  text-align: center;
+}
+
 .explain {
   margin-top: 20px;
   padding: 16px;

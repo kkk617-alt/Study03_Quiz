@@ -311,6 +311,8 @@ function renderQuiz() {
     }
   }
 
+  renderHintButton();
+
   const area = document.getElementById('explain-area');
   if (area) area.hidden = !explaining;
 
@@ -358,7 +360,11 @@ function buildOptionButton(item, i, explaining, record) {
   button.className = 'option';
   button.textContent = item.options[i];
   button.dataset.optionIndex = String(i);
-  button.disabled = explaining;
+
+  // 힌트로 지운 보기는 답할 수 없다. 해설 상태에서는 정답·오답 표시가 대신 들어간다.
+  const removed = !explaining && state.hintRemoved.indexOf(i) !== -1;
+  button.disabled = explaining || removed;
+  if (removed) button.classList.add('is-removed');
 
   if (explaining && record) {
     if (i === item.answerIndex) button.classList.add('is-answer');
@@ -370,6 +376,14 @@ function buildOptionButton(item, i, explaining, record) {
     selectOption(i);
   });
   return button;
+}
+
+// 힌트가 없는 모드에서는 버튼 자체를 숨긴다. 쓴 뒤와 해설 중에는 비활성이다 (PRD §3.3, §3.8.3).
+function renderHintButton() {
+  const button = document.getElementById('hint-btn');
+  if (!button) return;
+  button.hidden = !MODES[state.mode].hintAllowed;
+  button.disabled = state.hintUsed || state.phase !== 'answering';
 }
 
 // 순위표 기록 여부는 모드 이름이 아니라 MODES 테이블로 판단한다 (PRD §2.2, §3.2, §5.4).
@@ -464,6 +478,7 @@ function startRound(mode, categoryId) {
 // 버튼 disabled 만으로는 키보드·라벨 경로가 남으므로 여기서 phase 를 본다.
 function selectOption(index) {
   if (state.phase !== 'answering') return;
+  if (state.hintRemoved.indexOf(index) !== -1) return;
   const item = state.deck[state.index];
   if (!item) return;
 
@@ -477,6 +492,26 @@ function selectOption(index) {
   state.score += scoreFor(state.mode, correct, state.hintUsed);
   state.phase = 'explaining';
   stopTimer();
+  render();
+}
+
+// 문항당 1회. 오답 3개 중 무작위 2개를 지운다 (PRD §3.8.3).
+// 후보를 오답 인덱스로만 모으므로 정답은 지워질 수 없다.
+const HINT_REMOVE_COUNT = 2;
+
+function useHint() {
+  if (!MODES[state.mode].hintAllowed) return;
+  if (state.hintUsed) return;
+  if (state.phase !== 'answering') return;
+  const item = state.deck[state.index];
+  if (!item) return;
+
+  const wrong = [];
+  for (let i = 0; i < item.options.length; i++) {
+    if (i !== item.answerIndex) wrong.push(i);
+  }
+  state.hintRemoved = shuffle(wrong).slice(0, HINT_REMOVE_COUNT);
+  state.hintUsed = true;
   render();
 }
 
@@ -588,6 +623,9 @@ function init() {
 
   const next = document.getElementById('next-btn');
   if (next) next.addEventListener('click', nextQuestion);
+
+  const hint = document.getElementById('hint-btn');
+  if (hint) hint.addEventListener('click', useHint);
 
   const retry = document.getElementById('retry-btn');
   if (retry) retry.addEventListener('click', function () {
