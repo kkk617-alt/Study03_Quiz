@@ -31,7 +31,7 @@ const QUESTIONS = {
       question: '고려 인종의 명을 받아 『삼국사기』 편찬을 주도한 인물은?',
       options: ['김부식', '일연', '서거정', '정도전'],
       answerIndex: 0,
-      explanation: '1145년경에 편찬된 삼국시대 역사서로, 책임 편찬자가 사료 선택과 논찬을 직접 맡았습니다.',
+      explanation: '김부식이 인종의 명을 받아 1145년에 완성해 올린 삼국시대 역사서입니다.',
       source: { title: '한국민족문화대백과사전 「삼국사기」', url: 'https://encykorea.aks.ac.kr/Article/E0026478' },
     },
     {
@@ -39,7 +39,7 @@ const QUESTIONS = {
       question: '대한민국 임시정부가 중국 상하이에서 수립된 해는?',
       options: ['1910년', '1919년', '1926년', '1932년'],
       answerIndex: 1,
-      explanation: '3·1 운동 직후인 1919년 4월 11일에 세워져 1945년까지 활동했습니다.',
+      explanation: '3·1 운동 직후인 1919년 4월에 세워져 1945년 광복까지 독립운동을 이끌었습니다.',
       source: { title: '한국민족문화대백과사전 「대한민국임시정부」', url: 'https://encykorea.aks.ac.kr/Article/E0015017' },
     },
     {
@@ -47,15 +47,15 @@ const QUESTIONS = {
       question: '조선에서 측우기를 처음 만들어 사용한 왕은?',
       options: ['태종', '세종', '성종', '영조'],
       answerIndex: 1,
-      explanation: '조선의 공식적인 우량 측정 기구로, 영조 때 규격이 개정되었습니다.',
+      explanation: '세종 때 처음 만들어 서울과 각 지방 관청에 보급한 우량 측정 기구입니다.',
       source: { title: '한국민족문화대백과사전 「측우기」', url: 'https://encykorea.aks.ac.kr/Article/E0058337' },
     },
     {
       id: 'kh-06',
-      question: '『조선왕조실록』이 기록한 왕의 범위는?',
+      question: '국보로 지정된 『조선왕조실록』이 기록한 왕의 범위는?',
       options: ['태조부터 철종까지', '태조부터 고종까지', '세종부터 철종까지', '세종부터 순종까지'],
       answerIndex: 0,
-      explanation: '제1대부터 제25대까지 25대 472년간을 연월일 순서의 편년체로 적었습니다.',
+      explanation: '태조부터 제25대 철종까지 472년을 편년체로 적었고, 일제 강점기에 편찬된 고종·순종실록은 여기에 들지 않습니다.',
       source: { title: '한국민족문화대백과사전 「조선왕조실록」', url: 'https://encykorea.aks.ac.kr/Article/E0052160' },
     },
     {
@@ -71,7 +71,7 @@ const QUESTIONS = {
       question: '광개토왕릉비가 세워진 해는?',
       options: ['372년', '414년', '427년', '475년'],
       answerIndex: 1,
-      explanation: '장수왕 3년에 아버지의 시신을 왕릉으로 옮기면서 능비를 세웠습니다.',
+      explanation: '아들 장수왕이 아버지의 업적과 수묘인 규정을 새겨 세운 비석입니다.',
       source: { title: '한국민족문화대백과사전 「광개토왕릉비」', url: 'https://encykorea.aks.ac.kr/Article/E0005058' },
     },
     {
@@ -97,7 +97,7 @@ const QUESTIONS = {
       question: '해발 고도 기준 세계에서 가장 높은 산은?',
       options: ['에베레스트', '칸첸중가', '마칼루', '아나푸르나'],
       answerIndex: 0,
-      explanation: '네팔 사가르마타 국립공원을 압도하는 해발 8,848m의 봉우리입니다.',
+      explanation: '네팔과 중국 국경의 히말라야산맥에 있고 네팔 쪽 사면은 사가르마타 국립공원에 들어갑니다.',
       source: { title: 'UNESCO 세계유산 「사가르마타 국립공원」', url: 'https://whc.unesco.org/en/list/120/' },
     },
     {
@@ -113,7 +113,7 @@ const QUESTIONS = {
       question: '규모 기준 세계에서 가장 큰 산호초 지대가 있는 나라는?',
       options: ['오스트레일리아', '인도네시아', '필리핀', '멕시코'],
       answerIndex: 0,
-      explanation: '북동 해안의 그레이트배리어리프에 400종의 산호가 삽니다.',
+      explanation: '북동 해안을 따라 뻗은 그레이트배리어리프에 수백 종의 산호와 산호섬이 분포합니다.',
       source: { title: 'UNESCO 세계유산 「그레이트배리어리프」', url: 'https://whc.unesco.org/en/list/154/' },
     },
     {
@@ -145,7 +145,7 @@ const QUESTIONS = {
       question: '이과수 폭포가 국경을 이루는 두 나라는?',
       options: ['아르헨티나와 브라질', '브라질과 파라과이', '칠레와 아르헨티나', '페루와 볼리비아'],
       answerIndex: 0,
-      explanation: '높이 약 80m, 지름 2,700m의 반원형 폭포가 현무암 선을 따라 놓여 있습니다.',
+      explanation: '아르헨티나 미시오네스주와 브라질 파라나주 사이 현무암 절벽을 따라 반원형으로 놓여 있습니다.',
       source: { title: 'UNESCO 세계유산 「이과수 국립공원」', url: 'https://whc.unesco.org/en/list/303/' },
     },
     {
@@ -153,7 +153,7 @@ const QUESTIONS = {
       question: '최대 수심 기준 세계에서 가장 깊은 호수는?',
       options: ['바이칼호', '탕가니카호', '카스피해', '슈피리어호'],
       answerIndex: 0,
-      explanation: '시베리아 남동부에 있고 수심 1,700m로 전 세계 미결빙 담수의 20%를 담고 있습니다.',
+      explanation: '시베리아 남동부에 있으며 얼지 않은 지구 담수의 약 20%를 담고 있습니다.',
       source: { title: 'UNESCO 세계유산 「바이칼호」', url: 'https://whc.unesco.org/en/list/754/' },
     },
     {
@@ -179,7 +179,7 @@ const QUESTIONS = {
       question: '태양계에서 가장 크고 무거운 행성은?',
       options: ['목성', '토성', '천왕성', '해왕성'],
       answerIndex: 0,
-      explanation: '다른 행성을 모두 합한 것보다 두 배 넘게 무겁고 공인된 위성이 100개를 넘습니다.',
+      explanation: '다른 행성을 모두 합한 것보다 두 배 넘게 무거운 가스 행성입니다.',
       source: { title: 'NASA 「Jupiter」', url: 'https://science.nasa.gov/jupiter/' },
     },
     {
@@ -195,7 +195,7 @@ const QUESTIONS = {
       question: '표면 온도 기준 태양계에서 가장 뜨거운 행성은?',
       options: ['금성', '수성', '화성', '목성'],
       answerIndex: 0,
-      explanation: '표면 온도가 약 467℃에 이릅니다.',
+      explanation: '두꺼운 이산화탄소 대기의 온실 효과로 표면이 450℃를 넘습니다.',
       source: { title: 'NASA 「Venus Facts」', url: 'https://science.nasa.gov/venus/facts/' },
     },
     {
@@ -208,10 +208,10 @@ const QUESTIONS = {
     },
     {
       id: 'sc-05',
-      question: '태양계에서 가장 큰 화산의 이름은?',
+      question: '높이와 밑면 넓이 기준 태양계에서 가장 큰 화산은?',
       options: ['올림푸스 몬스', '마우나케아', '에트나산', '후지산'],
       answerIndex: 0,
-      explanation: '화성에 있는 화산으로 태양계의 어떤 화산보다 큽니다.',
+      explanation: '화성에 있으며 밑면이 미국 애리조나주와 비슷한 넓이를 덮습니다.',
       source: { title: 'NASA 「Mars Facts」', url: 'https://science.nasa.gov/mars/facts/' },
     },
     {
@@ -224,10 +224,10 @@ const QUESTIONS = {
     },
     {
       id: 'sc-07',
-      question: '고리계가 가장 뚜렷하고 복잡한 행성은?',
+      question: '얼음 조각으로 된 A·B·C 주고리를 거느린 행성은?',
       options: ['토성', '목성', '천왕성', '해왕성'],
       answerIndex: 0,
-      explanation: '고리를 가진 행성이 여럿이지만 A·B·C 주고리만큼 복잡한 것은 없습니다.',
+      explanation: '고리가 수많은 얼음·암석 조각으로 이루어져 주고리 사이의 틈까지 또렷이 구분됩니다.',
       source: { title: 'NASA 「Saturn Facts」', url: 'https://science.nasa.gov/saturn/facts/' },
     },
     {
@@ -243,13 +243,13 @@ const QUESTIONS = {
       question: '지구에서 달까지의 평균 거리는?',
       options: ['약 38만 km', '약 15만 km', '약 76만 km', '약 150만 km'],
       answerIndex: 0,
-      explanation: '약 238,855마일, 곧 384,400km 떨어져 있습니다.',
+      explanation: '평균 384,400km 떨어져 있어 빛으로 약 1.3초 거리입니다.',
       source: { title: 'NASA 「Moon Facts」', url: 'https://science.nasa.gov/moon/facts/' },
     },
     {
       id: 'sc-10',
       question: '진공에서 빛이 1초 동안 이동하는 거리는?',
-      options: ['299,792,458 m', '199,792,458 m', '399,792,458 m', '99,792,458 m'],
+      options: ['299,792,458 m', '199,792,458 m', '399,792,458 m', '349,792,458 m'],
       answerIndex: 0,
       explanation: '1983년부터 미터를 이 값으로 정의해 길이의 기준으로 삼았습니다.',
       source: { title: 'NIST 「SI Redefinition: The Meter」', url: 'https://www.nist.gov/si-redefinition/meter' },
@@ -269,7 +269,7 @@ const QUESTIONS = {
       question: '종묘가 신주를 모시고 제사를 올리는 왕조는?',
       options: ['조선', '고려', '신라', '백제'],
       answerIndex: 0,
-      explanation: '1392년부터 1910년까지 이어진 왕조의 유교 사당으로, 16세기부터 지금 모습을 지켰습니다.',
+      explanation: '1392년에 선 왕조의 유교 사당으로, 역대 왕과 왕비의 신주를 모십니다.',
       source: { title: 'UNESCO 세계유산 「종묘」', url: 'https://whc.unesco.org/en/list/738/' },
     },
     {
@@ -277,7 +277,7 @@ const QUESTIONS = {
       question: '15세기 초 창덕궁 건립을 명한 왕은?',
       options: ['태종', '태조', '세종', '성종'],
       answerIndex: 0,
-      explanation: '길한 자리를 골라 궁궐을 짓게 했고, 지형을 살린 정원이 함께 조성됐습니다.',
+      explanation: '태종 5년(1405)에 완성했고, 지형을 거스르지 않는 배치와 정원이 특징입니다.',
       source: { title: 'UNESCO 세계유산 「창덕궁」', url: 'https://whc.unesco.org/en/list/816/' },
     },
     {
@@ -306,10 +306,10 @@ const QUESTIONS = {
     },
     {
       id: 'ac-07',
-      question: '마추픽추를 세운 제국은?',
-      options: ['잉카 제국', '아스테카 제국', '마야 문명', '올메카 문명'],
+      question: '마추픽추를 세운 문명은?',
+      options: ['잉카', '아스테카', '마야', '올메카'],
       answerIndex: 0,
-      explanation: '해발 2,430m 열대 산림 속에 세운, 전성기 제국의 도시 유적입니다.',
+      explanation: '해발 2,430m 열대 산림 속에 세운 잉카 전성기의 도시 유적입니다.',
       source: { title: 'UNESCO 세계유산 「마추픽추 역사보호구역」', url: 'https://whc.unesco.org/en/list/274/' },
     },
     {
@@ -325,7 +325,7 @@ const QUESTIONS = {
       question: '판소리에서 북장단을 치며 창자를 받치는 사람은?',
       options: ['고수', '악공', '무동', '재인'],
       answerIndex: 0,
-      explanation: '한 명의 창자가 소리와 아니리로 이야기를 엮고 발림을 곁들이는 전통 공연 예술입니다.',
+      explanation: '북을 치는 고수가 추임새로 소리를 받치며 창자와 둘이서 판을 이룹니다.',
       source: { title: '한국민족문화대백과사전 「판소리」', url: 'https://encykorea.aks.ac.kr/Article/E0059663' },
     },
     {
