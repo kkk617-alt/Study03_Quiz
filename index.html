@@ -14,10 +14,14 @@
       <h1>상식 퀴즈</h1>
       <p class="lead">카테고리를 고르세요. 한 판은 10문제입니다.</p>
       <p id="data-error" class="error" hidden>문항 데이터에 오류가 있습니다</p>
-      <p class="field-label">모드</p>
-      <div id="mode-list" class="button-grid mode-grid"></div>
       <div id="category-list" class="button-grid"></div>
-      <p id="unranked-notice" class="notice" hidden></p>
+    </section>
+
+    <!-- 모드 선택 화면 -->
+    <section id="screen-mode" class="screen" hidden>
+      <h2 id="mode-title"></h2>
+      <div id="mode-list" class="button-grid"></div>
+      <button id="mode-back-btn" type="button" class="back">뒤로</button>
     </section>
 
     <!-- 문제 화면 -->
@@ -41,15 +45,14 @@
 
     <!-- 결과 화면 -->
     <section id="screen-result" class="screen" hidden>
-      <h2>결과</h2>
+      <h2 id="result-title">결과</h2>
       <p id="result-score" class="result-score"></p>
       <p id="result-label" class="round-label"></p>
-      <p id="review-result" class="review-line" hidden></p>
       <p id="result-unranked" class="notice" hidden></p>
       <ol id="result-list" class="result-list"></ol>
       <p id="all-correct" class="review-line is-all-correct" hidden>모두 정답</p>
-      <button id="review-btn" type="button" class="review" hidden></button>
       <div class="button-row">
+        <button id="review-btn" type="button" class="primary" hidden>틀린 문제 다시 풀기</button>
         <button id="retry-btn" type="button">같은 모드 다시</button>
         <button id="home-btn" type="button">처음으로</button>
       </div>

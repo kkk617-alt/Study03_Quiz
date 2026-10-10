@@ -77,26 +77,35 @@ button {
 
 button:hover:not(:disabled) { border-color: var(--accent); }
 
-/* 고른 모드를 눈에 보이게 표시한다 (PRD §3.2). */
-button.is-selected {
-  border-color: var(--accent);
-  background: #eaf0fd;
-  font-weight: 600;
+/* 모드 선택 화면의 모드 카드 — 이름, 규칙 한 줄, (연습만) 미기록 안내 (노트 5.5.2.2). */
+button.mode-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
 }
 
-/* 모드 라벨은 짧으므로 360px 에서도 한 줄에 3개를 유지한다. */
-.mode-grid {
-  flex-direction: row;
-  gap: 8px;
-  margin: 4px 0 20px;
-}
+button.mode-button strong { font-size: 1.05rem; }
 
-.mode-grid button { text-align: center; }
-
-.field-label {
-  margin: 0;
+button.mode-button span {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+}
+
+button.mode-button .mode-note {
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--notice-bg);
+  color: var(--fg);
+}
+
+/* 뒤로는 되돌아가는 버튼이라 폭을 채우지 않는다. */
+button.back {
+  width: auto;
+  min-width: 96px;
+  text-align: center;
 }
 
 button:disabled {
@@ -125,6 +134,9 @@ button:disabled {
   font-weight: 700;
   color: var(--accent);
 }
+
+/* 5초 이하면 빨간색으로 바뀐다 (노트 5.5.2.3). */
+.timer.is-urgent { color: var(--danger); }
 
 .question {
   margin: 0 0 20px;
@@ -162,6 +174,18 @@ button.option.is-chosen-wrong {
   background: #fdf0ee;
   text-decoration: line-through;
 }
+
+/* 해설에서 보기 오른쪽에 붙는 정답 / 오답 표시 (노트 5.5.2.3 그림). */
+button.option .mark {
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+button.option.is-answer .mark { color: #1f7a45; }
+button.option.is-chosen-wrong .mark { color: var(--danger); }
 
 /* 힌트로 지운 보기. 자리는 그대로 두고 지워진 것처럼 보이게 한다 (PRD §3.8.3). */
 button.option.is-removed {
@@ -222,20 +246,25 @@ button.next {
 
 .round-label { margin: 0 0 20px; color: var(--muted); }
 
-/* 복습 결과는 원점수와 섞이지 않게 따로 적는다 (PRD §3.8.4). */
+/* 다시 풀기 결과의 점수 줄은 한 문장이라 큰 숫자 서식을 쓰지 않는다 (노트 5.5.2.5). */
+.result-score.result-score-retry {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 .review-line {
-  margin: -12px 0 20px;
+  margin: 0 0 16px;
   font-weight: 600;
 }
 
-.review-line.is-all-correct {
-  margin: 0 0 16px;
-  color: #1f7a45;
-}
+.review-line.is-all-correct { color: #1f7a45; }
 
-button.review {
-  margin-bottom: 12px;
-  text-align: center;
+/* 다시 풀기는 결과 화면에서 가장 먼저 권하는 행동이다. */
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
   font-weight: 600;
 }
 

@@ -10,6 +10,7 @@
 const MODES = {
   practice: {
     label: '연습',
+    rule: '시간 제한과 힌트 없음, 맞히면 1점',
     timeLimit: null,
     hintAllowed: false,
     correctScore: 1,
@@ -19,6 +20,7 @@ const MODES = {
   },
   speed: {
     label: '스피드',
+    rule: '문항마다 15초, 시간이 지나면 오답',
     timeLimit: 15,
     hintAllowed: false,
     correctScore: 1,
@@ -28,6 +30,7 @@ const MODES = {
   },
   hint: {
     label: '힌트',
+    rule: '문항마다 힌트 1번, 힌트를 쓰고 맞히면 0.5점',
     timeLimit: null,
     hintAllowed: true,
     correctScore: 1,
@@ -253,10 +256,17 @@ function questionById(questionId) {
 
 const SCREEN_IDS = {
   home: 'screen-home',
+  mode: 'screen-mode',
   quiz: 'screen-quiz',
   result: 'screen-result',
   leaderboard: 'screen-leaderboard',
 };
+
+// 두 곳 이상에서 쓰는 문구는 한 곳에서만 만든다.
+const UNRANKED_TEXT = '순위표에 기록되지 않음';
+const HINT_LABEL = '힌트 (오답 2개 지우기)';
+const HINT_USED_LABEL = '힌트 사용함';
+const TIMER_URGENT_SECONDS = 5;
 
 // 화면 전환의 단일 진입점. state.screen 을 보고 해당 화면만 보이게 한다.
 function render() {
@@ -266,14 +276,13 @@ function render() {
     if (el) el.hidden = keys[i] !== state.screen;
   }
   if (state.screen === 'home') renderHome();
+  else if (state.screen === 'mode') renderModeScreen();
   else if (state.screen === 'quiz') renderQuiz();
   else if (state.screen === 'result') renderResult();
 }
 
+// 시작 화면에서는 카테고리만 고른다. 모드는 다음 화면에서 고른다.
 function renderHome() {
-  renderModeList();
-  renderUnrankedNotice('unranked-notice', true);
-
   const list = document.getElementById('category-list');
   if (!list) return;
   list.innerHTML = '';
@@ -286,14 +295,17 @@ function renderHome() {
     button.dataset.categoryId = category.id;
     button.disabled = dataBlocked;
     button.addEventListener('click', function () {
-      startRound(state.mode, category.id);
+      openModeScreen(category.id);
     });
     list.appendChild(button);
   }
 }
 
-// 모드 이름을 코드에 적지 않고 MODES[key].label 에서 읽는다. 모드를 더해도 이 함수는 그대로다.
-function renderModeList() {
+// 모드 이름과 규칙을 코드에 적지 않고 MODES 테이블에서 읽는다 (PRD §5.4).
+// 순위표 미기록 안내는 ranked 가 false 인 모드에만 붙는다 — 모드 이름으로 분기하지 않는다.
+function renderModeScreen() {
+  setText('mode-title', categoryName(state.categoryId) + ' · 모드를 고르세요');
+
   const list = document.getElementById('mode-list');
   if (!list) return;
   list.innerHTML = '';
@@ -301,17 +313,31 @@ function renderModeList() {
   const keys = Object.keys(MODES);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
+    const mode = MODES[key];
+
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = MODES[key].label;
+    button.className = 'mode-button';
     button.dataset.mode = key;
+    button.disabled = dataBlocked;
 
-    const selected = key === state.mode;
-    button.setAttribute('aria-pressed', selected ? 'true' : 'false');
-    if (selected) button.classList.add('is-selected');
+    const name = document.createElement('strong');
+    name.textContent = mode.label;
+    button.appendChild(name);
+
+    const rule = document.createElement('span');
+    rule.textContent = mode.rule;
+    button.appendChild(rule);
+
+    if (!mode.ranked) {
+      const note = document.createElement('span');
+      note.className = 'mode-note';
+      note.textContent = UNRANKED_TEXT;
+      button.appendChild(note);
+    }
 
     button.addEventListener('click', function () {
-      selectMode(key);
+      startRound(key, state.categoryId);
     });
     list.appendChild(button);
   }
@@ -326,8 +352,8 @@ function renderQuiz() {
   const record = explaining ? state.answers[state.answers.length - 1] : null;
 
   setText('progress', (state.index + 1) + ' / ' + state.deck.length);
-  setText('round-label', categoryName(state.categoryId) + ' · ' + MODES[state.mode].label);
-  setText('score', '점수 ' + formatScore(state.score));
+  setText('round-label', roundLabel());
+  setText('score', state.reviewRound ? '채점 안 함' : '점수 ' + formatScore(state.score));
   renderTimer();
   setText('question-text', item.question);
 
@@ -345,7 +371,7 @@ function renderQuiz() {
   if (area) area.hidden = !explaining;
 
   if (explaining && record) {
-    setText('feedback', record.correct ? '✓ 정답' : '✗ 오답');
+    setText('feedback', verdictText(record));
     const feedback = document.getElementById('feedback');
     if (feedback) {
       feedback.classList.remove('is-correct', 'is-wrong');
@@ -361,6 +387,18 @@ function renderQuiz() {
   }
 }
 
+// 다시 풀기 라운드는 채점하지 않으므로 그 사실을 상단에 적는다.
+function roundLabel() {
+  return categoryName(state.categoryId) + ' · ' + MODES[state.mode].label +
+    (state.reviewRound ? ' · 다시 풀기' : '');
+}
+
+// 시간 초과는 보기를 고르지 않은 오답이다. 고른 오답과 다른 문구를 쓴다.
+function verdictText(record) {
+  if (record.correct) return '✓ 정답';
+  return record.chosenIndex === null ? '시간 초과' : '✗ 오답';
+}
+
 // 제한 시간이 없는 모드에서는 표시 자체를 숨긴다. 모드 이름으로 분기하지 않는다 (PRD §5.4).
 // 해설 중에는 deadline 이 null 이다 — 그때는 마지막으로 그린 값을 그대로 둔다(타이머 정지).
 function renderTimer() {
@@ -371,6 +409,7 @@ function renderTimer() {
   el.hidden = limit === null || limit === undefined;
   if (el.hidden) {
     el.textContent = '';
+    el.classList.remove('is-urgent');
     return;
   }
   if (state.deadline === null) return;
@@ -379,7 +418,9 @@ function renderTimer() {
 
 function setTimerText(seconds) {
   const el = document.getElementById('timer');
-  if (el) el.textContent = '남은 시간 ' + seconds + '초';
+  if (!el) return;
+  el.textContent = '남은 시간 ' + seconds + '초';
+  el.classList.toggle('is-urgent', seconds <= TIMER_URGENT_SECONDS);
 }
 
 function buildOptionButton(item, i, explaining, record) {
@@ -395,8 +436,14 @@ function buildOptionButton(item, i, explaining, record) {
   if (removed) button.classList.add('is-removed');
 
   if (explaining && record) {
-    if (i === item.answerIndex) button.classList.add('is-answer');
-    if (i === record.chosenIndex && !record.correct) button.classList.add('is-chosen-wrong');
+    if (i === item.answerIndex) {
+      button.classList.add('is-answer');
+      appendMark(button, '정답');
+    }
+    if (i === record.chosenIndex && !record.correct) {
+      button.classList.add('is-chosen-wrong');
+      appendMark(button, '오답');
+    }
     if (i === record.chosenIndex && record.correct) button.classList.add('is-chosen-right');
   }
 
@@ -406,24 +453,28 @@ function buildOptionButton(item, i, explaining, record) {
   return button;
 }
 
+function appendMark(button, text) {
+  const mark = document.createElement('span');
+  mark.className = 'mark';
+  mark.textContent = text;
+  button.appendChild(mark);
+}
+
 // 힌트가 없는 모드에서는 버튼 자체를 숨긴다. 쓴 뒤와 해설 중에는 비활성이다 (PRD §3.3, §3.8.3).
 function renderHintButton() {
   const button = document.getElementById('hint-btn');
   if (!button) return;
   button.hidden = !MODES[state.mode].hintAllowed;
   button.disabled = state.hintUsed || state.phase !== 'answering';
+  button.textContent = state.hintUsed ? HINT_USED_LABEL : HINT_LABEL;
 }
 
-// 순위표 기록 여부는 모드 이름이 아니라 MODES 테이블로 판단한다 (PRD §2.2, §3.2, §5.4).
-// 두 화면이 같은 문구를 쓰므로 한 곳에서만 만든다. 시작 화면은 어떤 모드인지 알 길이
-// 따로 없어 모드 이름을 앞에 붙이고, 결과 화면은 바로 윗줄이 이미 모드를 말하므로 붙이지 않는다.
-function renderUnrankedNotice(elementId, withModeLabel) {
-  const notice = document.getElementById(elementId);
+// 순위표 기록 여부는 모드 이름이 아니라 MODES 테이블로 판단한다 (PRD §2.2, §5.4).
+function renderUnrankedNotice() {
+  const notice = document.getElementById('result-unranked');
   if (!notice) return;
-  const mode = MODES[state.mode];
-  const prefix = withModeLabel ? mode.label + ' 모드 · ' : '';
-  notice.textContent = prefix + '순위표에 기록되지 않음';
-  notice.hidden = mode.ranked;
+  notice.textContent = UNRANKED_TEXT;
+  notice.hidden = MODES[state.mode].ranked;
 }
 
 function setText(id, text) {
@@ -432,40 +483,39 @@ function setText(id, text) {
 }
 
 // 만점은 모든 모드에서 10점이다 (PRD §2.3).
-// 복습 라운드 뒤에는 위쪽 점수가 원점수(baseScore)여야 한다 — 복습 점수를 더하지 않는다.
+// 다시 풀기 라운드는 채점하지 않는다 — 원점수(baseScore)를 그대로 두고 이번에 몇 문제를
+// 맞혔는지만 따로 적는다 (PRD §3.8.4).
 function renderResult() {
-  const headline = state.reviewRound ? state.baseScore : state.score;
-  setText('result-score', formatScore(headline) + ' / ' + QUESTIONS_PER_CATEGORY);
+  const total = state.deck.length;
+  const correct = total - countWrong(state.answers);
+
+  setText('result-title', state.reviewRound ? '다시 풀기 결과' : '결과');
+  setText('result-score', state.reviewRound
+    ? total + '문제 중 ' + correct + '문제 맞힘 · 이번 판 점수 ' +
+      formatScore(state.baseScore) + ' / ' + QUESTIONS_PER_CATEGORY
+    : formatScore(state.score) + ' / ' + QUESTIONS_PER_CATEGORY);
+
+  const score = document.getElementById('result-score');
+  if (score) score.classList.toggle('result-score-retry', state.reviewRound);
+
   setText('result-label', categoryName(state.categoryId) + ' · ' +
     MODES[state.mode].label + ' 모드');
-  renderUnrankedNotice('result-unranked');
+  renderUnrankedNotice();
   renderResultList();
   renderReviewArea();
 }
 
-// 복습 제공 여부는 모드 이름이 아니라 MODES[...].retryWrong 으로 판단한다 (PRD §5.4).
+// 다시 풀기 제공 여부는 모드 이름이 아니라 MODES[...].retryWrong 으로 판단한다 (PRD §5.4).
 // 틀린 문항이 0개면 버튼을 숨기고 '모두 정답' 을 보여 준다 (PRD §3.9.3).
 function renderReviewArea() {
   const allowed = MODES[state.mode].retryWrong === true;
   const wrong = countWrong(state.answers);
 
   const button = document.getElementById('review-btn');
-  if (button) {
-    button.hidden = !allowed || wrong === 0;
-    button.textContent = '틀린 문제 다시 풀기 (' + wrong + '문항)';
-  }
+  if (button) button.hidden = !allowed || wrong === 0;
 
   const allCorrect = document.getElementById('all-correct');
   if (allCorrect) allCorrect.hidden = !allowed || wrong > 0;
-
-  const line = document.getElementById('review-result');
-  if (line) {
-    const show = allowed && state.reviewRound;
-    line.hidden = !show;
-    line.textContent = show
-      ? '복습: ' + state.deck.length + '문항 중 ' + (state.answers.length - wrong) + '문항 정답'
-      : '';
-  }
 }
 
 function countWrong(answers) {
@@ -494,13 +544,24 @@ function renderResultList() {
 
     const detail = document.createElement('p');
     detail.classList.add('result-detail');
-    detail.textContent = (answer.correct ? '정답' : '오답') + ' · 정답: ' +
+    detail.textContent = answerVerdict(answer) + ' · 정답: ' +
       (item ? item.options[item.answerIndex] : '');
 
     li.appendChild(question);
     li.appendChild(detail);
     list.appendChild(li);
   }
+}
+
+// 목록 한 줄의 판정. 시간 초과와 힌트 사용을 구분해 적는다.
+// 힌트 점수는 문구에 박아 넣지 않고 MODES 테이블에서 읽는다.
+function answerVerdict(answer) {
+  if (!answer.correct) return answer.chosenIndex === null ? '시간 초과' : '오답';
+  const hinted = MODES[state.mode].hintedScore;
+  if (answer.hintUsed && hinted !== null && hinted !== undefined) {
+    return '정답 (힌트 ' + formatScore(hinted) + '점)';
+  }
+  return '정답';
 }
 
 function deckItemById(questionId) {
@@ -512,10 +573,17 @@ function deckItemById(questionId) {
 
 // ---- 7. 이벤트 핸들러 ----
 
-// 모드를 고르는 것만으로 라운드가 시작되지 않는다. 시작은 카테고리를 고를 때다 (PRD §3.2).
-function selectMode(mode) {
-  if (!MODES[mode]) return;
-  state.mode = mode;
+// 카테고리를 고르면 모드 선택 화면으로 간다. 라운드는 모드를 고를 때 시작한다.
+function openModeScreen(categoryId) {
+  if (dataBlocked) return;
+  state.categoryId = categoryId;
+  state.screen = 'mode';
+  render();
+}
+
+function goHome() {
+  stopTimer();
+  state.screen = 'home';
   render();
 }
 
@@ -538,8 +606,8 @@ function startRound(mode, categoryId) {
   startTimer();
 }
 
-// 복습 라운드는 원점수를 건드리지 않는다 (PRD §3.8.4).
-// baseScore 는 첫 복습에서 한 번만 저장한다 — 두 번째 복습이 복습 점수로 덮어쓰면
+// 다시 풀기는 채점하지 않으므로 state.score 를 건드리지 않는다 (PRD §3.8.4).
+// baseScore 는 첫 다시 풀기에서 한 번만 저장한다 — 두 번째 다시 풀기가 덮어쓰면
 // 원점수가 실력 지표 기능을 잃는다 (Review Focus 3).
 function startReviewRound() {
   const deck = buildReviewDeck(state.answers);
@@ -548,7 +616,6 @@ function startReviewRound() {
   if (state.baseScore === null) state.baseScore = state.score;
   state.deck = deck;
   state.index = 0;
-  state.score = 0;
   state.answers = [];
   state.phase = 'answering';
   state.hintUsed = false;
@@ -574,7 +641,8 @@ function selectOption(index) {
     correct: correct,
     hintUsed: state.hintUsed,
   });
-  state.score += scoreFor(state.mode, correct, state.hintUsed);
+  // 다시 풀기는 채점하지 않는다. 원점수가 그대로 남는다.
+  state.score += state.reviewRound ? 0 : scoreFor(state.mode, correct, state.hintUsed);
   state.phase = 'explaining';
   stopTimer();
   render();
@@ -721,11 +789,10 @@ function init() {
   });
 
   const home = document.getElementById('home-btn');
-  if (home) home.addEventListener('click', function () {
-    stopTimer();
-    state.screen = 'home';
-    render();
-  });
+  if (home) home.addEventListener('click', goHome);
+
+  const back = document.getElementById('mode-back-btn');
+  if (back) back.addEventListener('click', goHome);
 
   document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -947,6 +1014,60 @@ selfTest('실제 문항 데이터(QUESTIONS)가 규칙을 통과한다', functio
   let total = 0;
   for (let c = 0; c < CATEGORIES.length; c++) total += QUESTIONS[CATEGORIES[c].id].length;
   check(total === CATEGORIES.length * QUESTIONS_PER_CATEGORY, '전체 문항이 ' + total + '개');
+});
+
+// ---- 2단계 점검 (노트 5.3.2.8: 2단계의 점검 항목은 15개) ----
+
+selfTest('MODES: 모드 3개가 PRD §5.4 의 값을 그대로 담는다', function (check) {
+  check(Object.keys(MODES).join(',') === 'practice,speed,hint', '모드 키가 다름');
+  check(MODES.practice.timeLimit === null && MODES.speed.timeLimit === 15 &&
+    MODES.hint.timeLimit === null, '제한 시간이 다름');
+  check(MODES.hint.hintAllowed === true && MODES.practice.hintAllowed === false &&
+    MODES.speed.hintAllowed === false, '힌트 허용이 다름');
+  check(MODES.hint.hintedScore === 0.5, '힌트 점수가 0.5가 아님');
+  check(MODES.practice.ranked === false && MODES.speed.ranked === true &&
+    MODES.hint.ranked === true, '순위표 기록 여부가 다름');
+  check(MODES.practice.retryWrong === true && MODES.speed.retryWrong === false &&
+    MODES.hint.retryWrong === false, '다시 풀기 제공 여부가 다름');
+  const keys = Object.keys(MODES);
+  for (let i = 0; i < keys.length; i++) {
+    check(typeof MODES[keys[i]].rule === 'string' && MODES[keys[i]].rule !== '',
+      keys[i] + ': 모드 선택 화면에 쓸 규칙 문구가 없음');
+  }
+});
+
+selfTest('scoreFor: 힌트를 쓰고 맞히면 0.5점, 시간 초과는 0점', function (check) {
+  check(scoreFor('hint', true, true) === 0.5, '힌트 정답이 0.5점이 아님');
+  check(scoreFor('hint', true, false) === 1, '힌트를 안 쓴 정답이 1점이 아님');
+  check(scoreFor('hint', false, true) === 0, '힌트를 쓴 오답이 0점이 아님');
+  check(scoreFor('speed', false, false) === 0, '시간 초과(오답)가 0점이 아님');
+  check(scoreFor('speed', true, true) === 1, '힌트가 없는 모드의 정답이 1점이 아님');
+});
+
+selfTest('buildReviewDeck: 틀린 문항만 다시 섞어 담고 정답을 보존한다', function (check) {
+  const deck = buildDeck(CATEGORIES[0].id);
+  const answers = [];
+  for (let i = 0; i < deck.length; i++) {
+    answers.push({
+      questionId: deck[i].id,
+      chosenIndex: i < 3 ? (deck[i].answerIndex + 1) % OPTIONS_PER_QUESTION : deck[i].answerIndex,
+      correct: i >= 3,
+      hintUsed: false,
+    });
+  }
+  const review = buildReviewDeck(answers);
+  check(review.length === 3, '다시 풀기 덱이 ' + review.length + '문항임');
+
+  const want = [deck[0].id, deck[1].id, deck[2].id].sort().join(',');
+  check(review.map(function (d) { return d.id; }).sort().join(',') === want,
+    '틀린 문항과 다른 문항이 담김');
+
+  for (let i = 0; i < review.length; i++) {
+    const origin = QUESTIONS[CATEGORIES[0].id].filter(function (q) { return q.id === review[i].id; })[0];
+    check(review[i].options[review[i].answerIndex] === origin.options[origin.answerIndex],
+      review[i].id + ': 정답 보기가 바뀜');
+  }
+  check(buildReviewDeck([]).length === 0, '틀린 문항이 없는데 덱이 비지 않음');
 });
 
 // 주소 끝에 ?test 가 있으면 점검을 돌린다 (노트 5.3.2.8).
