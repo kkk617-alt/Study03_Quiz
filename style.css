@@ -33,6 +33,13 @@ body {
 
 .screen[hidden] { display: none; }
 
+/* 과제 제출용 학번·이름. 시작 화면 맨 위에 둔다. */
+.submitter {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 h1 {
   margin: 0 0 8px;
   font-size: 1.6rem;
